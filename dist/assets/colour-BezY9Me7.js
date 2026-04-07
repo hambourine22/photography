@@ -1,4 +1,4 @@
-import{C as m,I as C,S as y,M as W,a as P,W as F,b as x,P as q,c as k}from"./three.module-Dxk6m3Pq.js";import{E as B,R as G,O as z}from"./OutputPass-tTvVSQ6w.js";import{G as L}from"./lil-gui.esm-CSNn1Ydq.js";function T(r,u){const a=new L({title:"Wobbly Sphere Pro"}),e={sphereSize:4,rotationSpeed:.2,wobbleStrength:.3,wobbleFrequency:2.5,wobbleSpeed:1,lineFrequency:20,lineSharpness:.5,colorPink:"#f72e62",colorBlue:"#201fff",grainScale:15};r.background=new m("#070726");const S=`
+import{C as m,I as C,S as y,M as W,a as P,W as F,b as x,P as q,c as k}from"./three.module-rN4qoPaD.js";import{E as B,R as G,O as z}from"./OutputPass-LkdMt5vd.js";import{G as L}from"./lil-gui.esm-CSNn1Ydq.js";function T(r,u){const a=new L({title:"Wobbly Sphere Pro"}),e={sphereSize:4,rotationSpeed:.2,wobbleStrength:.3,wobbleFrequency:2.5,wobbleSpeed:1,lineFrequency:20,lineSharpness:.5,colorPink:"#f72e62",colorBlue:"#201fff",grainScale:15};r.background=new m("#070726");const S=`
         uniform float uTime;
         uniform float uWobbleStrength;
         uniform float uWobbleFrequency;

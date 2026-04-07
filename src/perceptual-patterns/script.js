@@ -21,8 +21,20 @@ const RIBBON_BREAKPOINTS = [
     { minWidth: 0,    ribbons: 4  }, // iPhone 14 and smaller
 ]
 
+// iOS-safe viewport width detection.
+// window.innerWidth lies on iOS Safari (especially in iframes) — it can return
+// the layout viewport (e.g. 980px) instead of the actual visible width.
+const getViewportWidth = () => {
+    // Prefer visualViewport (most accurate on iOS Safari, accounts for zoom and address bar)
+    if (window.visualViewport && window.visualViewport.width) {
+        return window.visualViewport.width
+    }
+    // Fall back to documentElement.clientWidth (more reliable than window.innerWidth on iOS)
+    return document.documentElement.clientWidth || window.innerWidth
+}
+
 const getRibbonCount = () => {
-    const w = window.innerWidth
+    const w = getViewportWidth()
     for (const bp of RIBBON_BREAKPOINTS) {
         if (w >= bp.minWidth) return bp.ribbons
     }
@@ -228,6 +240,11 @@ if (renderer) {
 
     window.addEventListener('resize', handleResize)
     window.addEventListener('orientationchange', handleResize)
+
+    // iOS Safari: visualViewport fires more reliably than window.resize
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleResize)
+    }
 
     if (typeof ResizeObserver !== 'undefined' && canvas.parentElement) {
         const ro = new ResizeObserver(handleResize)

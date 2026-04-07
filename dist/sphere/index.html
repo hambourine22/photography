@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithmic Art - Wavy Sphere</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #e0e0e0; }
+        canvas { display: block; }
+        #instructions {
+            position: absolute; bottom: 20px; left: 20px;
+            font-family: sans-serif; color: #333; pointer-events: none;
+        }
+    </style>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "lil-gui": "https://unpkg.com/lil-gui@0.19.1/dist/lil-gui.esm.min.js"
+            }
+        }
+    </script>
+  <script type="module" crossorigin src="/assets/sphere-Bj1jwEsC.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/three.module-rN4qoPaD.js">
+  <link rel="modulepreload" crossorigin href="/assets/lil-gui.esm-CSNn1Ydq.js">
+</head>
+<body>
+    <div id="instructions">
+        Press <b>S</b>: Save 4K Still Image<br>
+        Press <b>R</b>: Start/Stop 4K Recording
+    </div>
+</body>
+</html>
