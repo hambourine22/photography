@@ -1,11 +1,21 @@
 {
+  "trailingSlash": true,
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/perceptual-patterns/(.*)",
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'self' https://*.webflow.io https://*.webflow.com"
+          "value": "frame-ancestors 'self' https://hux.works https://www.hux.works https://*.webflow.io"
+        }
+      ]
+    },
+    {
+      "source": "/taurus-embed/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "frame-ancestors 'self' https://hux.works https://www.hux.works https://*.webflow.io"
         }
       ]
     }

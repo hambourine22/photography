@@ -9,6 +9,7 @@ export default defineConfig({
   plugins: [react()],
   root: 'src',
   publicDir: '../public',
+  base: './',                     // ← add this
   build: {
     outDir: '../dist',
     emptyOutDir: true,
@@ -26,6 +27,8 @@ export default defineConfig({
         patterns           : resolve(__dirname, 'src/patterns/index.html'),
         sphere             : resolve(__dirname, 'src/sphere/index.html'),
         triGrid            : resolve(__dirname, 'src/tri-grid/index.html'),
+        taurus             : resolve(__dirname, 'src/taurus/index.html'),
+        taurusEmbed        : resolve(__dirname, 'src/taurus-embed/index.html'),
       }
     }
   },
