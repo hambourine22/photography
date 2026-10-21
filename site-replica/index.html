@@ -120,6 +120,26 @@
         <figcaption>05 · lorry</figcaption>
       </figure>
 
+      <h3>artefacts</h3>
+      <figure class="info-artefact">
+        <div class="info-sheets">
+          <img alt="Sheet 1, anatomy: the journey as one straight line along distance from Bristol, cut into strata for route, bearing, segment length, latitude, frames and dispatches across days 999 to 1003"
+               src="images/info/anatomy-sheet-1.jpg" width="2400" height="1722" loading="lazy" decoding="async">
+          <img alt="Sheet 2, key: registers of designation, days, legs, waypoints and crossings, line weights, icons and the title block"
+               src="images/info/anatomy-sheet-2.jpg" width="1040" height="1722" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          anatomy of distance travelled · 1000·С002 · листи 1–2 ·
+          <a href="images/info/anatomy-of-distance-travelled.pdf" target="_blank" rel="noopener">open the PDF (4.2 MB)</a>
+        </figcaption>
+      </figure>
+      <figure class="info-artefact info-artefact--video">
+        <video src="images/info/time-as-shape.mp4" poster="images/info/time-as-shape-poster.jpg"
+               width="1080" height="1350" muted loop playsinline preload="metadata"
+               aria-label="Time as shape: a strip of motorway, barrier and sky folded into an isometric corner, moving as the road passes"></video>
+        <figcaption>time as shape · 8 s loop</figcaption>
+      </figure>
+
       <button type="button" class="info-close" aria-label="Close info panel">Close</button>
     </article>
   </section>
@@ -206,15 +226,22 @@
         if (e.key === 'ArrowLeft') { e.preventDefault(); show(index - 1); }
       });
 
-      // Info toggle.
+      // Info toggle. The "time as shape" loop plays only while Info is open;
+      // with reduced motion it waits for the viewer, behind its controls.
+      const loopVideo = infoPanel.querySelector('video');
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
       const closeInfo = () => {
         infoPanel.hidden = true;
+        loopVideo?.pause();
       };
       const openInfo = e => {
         e.preventDefault();
         infoPanel.hidden = false;
         infoPanel.scrollTop = 0;
         document.getElementById('info-heading').focus({ preventScroll: true });
+        if (!loopVideo) return;
+        if (reduceMotion.matches) loopVideo.controls = true;
+        else loopVideo.play().catch(() => { loopVideo.controls = true; });
       };
       infoLink?.addEventListener('click', openInfo);
       infoPanel.querySelector('.info-close').addEventListener('click', () => {

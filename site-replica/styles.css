@@ -329,6 +329,37 @@ body:has(.info-panel:not([hidden])) .navbar {
   letter-spacing: 0.06em;
   color: var(--muted);
 }
+/* Artefacts: the two sheets side by side at equal height (their widths
+   are 2700 and 1170 pt on the same 1938 pt height), then the loop. */
+.info-artefact { margin: 0 0 var(--sp-5); }
+.info-sheets {
+  display: grid;
+  grid-template-columns: 2700fr 1170fr;
+  gap: var(--sp-2);
+}
+.info-sheets img { width: 100%; height: auto; background: #141414; }
+.info-artefact--video video {
+  display: block;
+  width: min(100%, 28rem);
+  height: auto;
+  aspect-ratio: 4 / 5;
+  background: #000;
+}
+.info-artefact figcaption {
+  margin-top: var(--sp-2);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.info-artefact figcaption a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+@media (max-width: 767px) {
+  .info-sheets { grid-template-columns: 1fr; }
+}
+
 .info-close {
   margin-top: var(--sp-4);
   min-height: 44px;
