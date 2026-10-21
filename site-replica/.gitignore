@@ -4,3 +4,4 @@ reference/
 
 # Full-size originals of the photographs; the site serves resized copies.
 images/_originals/
+.DS_Store
