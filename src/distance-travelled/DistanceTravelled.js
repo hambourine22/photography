@@ -626,7 +626,7 @@ export class DistanceTravelled {
 
     // ── Renderer ──────────────────────────────────────────────────────────────
     // WebGL draws the line work and particles; a CSS3D layer on top carries the
-    // type, so labels set in Jost / JetBrains Mono stay crisp at any zoom.
+    // type, so labels set in JetBrains Mono / PT Mono stay crisp at any zoom.
     _initRenderer() {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true })
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
