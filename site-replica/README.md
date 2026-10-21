@@ -5,8 +5,10 @@ thousandth day. The layout started as a plain-HTML / CSS / JS replica of the
 paulhempstead.com portfolio, built as a learning exercise; the palette and type
 now come from the 1000 design system. No framework. No build step.
 
-- `images/main/` — the gallery frames, `distance-travelled-01.jpg` to `-05.jpg`.
-- `images/info/` — the spreads shown on the Info page, `spread-01.jpg` to `-03.jpg`.
+- `images/main/` — the gallery frames, `dt1000-<frame>.jpg`, 2000 px wide.
+- `images/info/` — the maquette spreads shown on the Info page,
+  `maquette-00.jpg` to `-05.jpg`, 2400 px wide.
+- `images/_originals/` — the full-size files; ignored by git and by Vercel.
 
 ## Files
 

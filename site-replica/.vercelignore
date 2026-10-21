@@ -1,0 +1,4 @@
+# Not served: raw source copies, full-size originals, Finder files.
+reference/
+images/_originals/
+.DS_Store

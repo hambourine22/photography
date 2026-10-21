@@ -1,3 +1,6 @@
 # Raw copies of the source site used for comparison during development.
 # Not shipped per the project brief.
 reference/
+
+# Full-size originals of the photographs; the site serves resized copies.
+images/_originals/

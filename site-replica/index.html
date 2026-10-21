@@ -30,23 +30,23 @@
   <main id="gallery" class="gallery" tabindex="-1" aria-label="Photograph gallery, click or press the arrow keys to advance">
     <figure class="image-container center-image active">
       <img alt="Two cars blurred by motion on a motorway beside a grass verge and a wooded embankment, at dusk"
-           src="images/main/distance-travelled-01.jpg" width="2000" height="1346" decoding="async">
+           src="images/main/dt1000-L1061878.jpg" width="2000" height="1346" decoding="async">
     </figure>
     <figure class="image-container right-image active">
       <img alt="A motorway bridge with a yellow-railed glass noise barrier, church spires beyond under an overcast sky"
-           src="images/main/distance-travelled-02.jpg" width="2000" height="1346" decoding="async">
+           src="images/main/dt1000-L1061880.jpg" width="2000" height="1346" decoding="async">
     </figure>
     <figure class="image-container">
       <img alt="A curved noise-barrier wall above a closed gate, roadside bollards blurred in the foreground"
-           src="images/main/distance-travelled-03.jpg" width="2000" height="1346" decoding="async">
+           src="images/main/dt1000-L1061882.jpg" width="2000" height="1346" decoding="async">
     </figure>
     <figure class="image-container">
       <img alt="A white lorry cab hauling a blue curtain-sided trailer, blurred by motion in the next lane"
-           src="images/main/distance-travelled-04.jpg" width="2000" height="1346" decoding="async">
+           src="images/main/dt1000-L1061891.jpg" width="2000" height="1346" decoding="async">
     </figure>
     <figure class="image-container left-image active">
       <img alt="A slatted noise barrier marked with painted graffiti, seen across the carriageway and a blurred verge"
-           src="images/main/distance-travelled-05.jpg" width="2000" height="1346" decoding="async">
+           src="images/main/dt1000-L1061892.jpg" width="2000" height="1346" decoding="async">
     </figure>
 
     <figcaption class="project-title" id="project-title" aria-live="polite">
@@ -56,11 +56,11 @@
 
   <!-- ─── Navigation ─── -->
   <nav class="navbar" role="navigation" aria-label="Primary">
-    <a href="#projects" class="svg-link" aria-label="тисяча · distance travelled, home">
+    <a href="#pages" class="svg-link" aria-label="тисяча · distance travelled, home">
       <span class="nav-wordmark" lang="uk">тисяча</span>
     </a>
     <ul class="nav-menu">
-      <li><a href="#projects" class="nav-link">Projects</a></li>
+      <li><a href="#pages" class="nav-link">Pages</a></li>
       <li><a href="#info" class="nav-link">Info</a></li>
     </ul>
   </nav>
@@ -90,19 +90,34 @@
 
       <h3 class="info-spreads-heading">spreads</h3>
       <figure class="info-spread">
+        <img alt="Cover spread: a blue diamond-plate ground crossed by a cream spine band that carries the word тисяча, set vertically"
+             src="images/info/maquette-00.jpg" width="2400" height="1492" loading="lazy" decoding="async">
+        <figcaption>00 · cover</figcaption>
+      </figure>
+      <figure class="info-spread">
         <img alt="Spread: a quoted report from Defense Intelligence of Ukraine set in a monospaced face, beside a grid of eighteen black-and-white frames of the road"
-             src="images/info/spread-01.jpg" width="2000" height="1243" loading="lazy" decoding="async">
+             src="images/info/maquette-01.jpg" width="2400" height="1492" loading="lazy" decoding="async">
         <figcaption>01 · dispatch and contact sheet</figcaption>
       </figure>
       <figure class="info-spread">
-        <img alt="A motorway underpass: concrete pillars in shadow above a crash barrier blurred by motion"
-             src="images/info/spread-02.jpg" width="2000" height="1346" loading="lazy" decoding="async">
-        <figcaption>02 · underpass</figcaption>
+        <img alt="Spread: two frames across the top, cars passing beneath a flyover and the pillars of an underpass, the page below left white"
+             src="images/info/maquette-02.jpg" width="2400" height="1492" loading="lazy" decoding="async">
+        <figcaption>02 · flyover</figcaption>
       </figure>
       <figure class="info-spread">
-        <img alt="Spread: two frames side by side, cars passing beneath a flyover and the same underpass with its pillars"
-             src="images/info/spread-03.jpg" width="2000" height="1229" loading="lazy" decoding="async">
-        <figcaption>03 · two frames</figcaption>
+        <img alt="Spread: two frames across the top, a bridge’s glass noise barrier and a curved barrier wall, with the words “Its all uphill” set below"
+             src="images/info/maquette-03.jpg" width="2400" height="1492" loading="lazy" decoding="async">
+        <figcaption>03 · its all uphill</figcaption>
+      </figure>
+      <figure class="info-spread">
+        <img alt="Spread: one frame across the top, two cars on the road beneath a wooded embankment, the page below left white"
+             src="images/info/maquette-04.jpg" width="2400" height="1492" loading="lazy" decoding="async">
+        <figcaption>04 · embankment</figcaption>
+      </figure>
+      <figure class="info-spread">
+        <img alt="Spread: one frame across the top, a white lorry hauling a blue trailer, blurred by motion, the page below left white"
+             src="images/info/maquette-05.jpg" width="2400" height="1492" loading="lazy" decoding="async">
+        <figcaption>05 · lorry</figcaption>
       </figure>
 
       <button type="button" class="info-close" aria-label="Close info panel">Close</button>
@@ -118,7 +133,7 @@
       const gallery = document.getElementById('gallery');
       const infoPanel = document.getElementById('info');
       const infoLink = document.querySelector('a.nav-link[href="#info"]');
-      const projectLinks = document.querySelectorAll('a[href="#projects"]');
+      const pageLinks = document.querySelectorAll('a[href="#pages"]');
       let frames = [...gallery.querySelectorAll('.image-container')];
       const pad = n => String(n).padStart(2, '0');
 
@@ -213,8 +228,8 @@
         }
       });
 
-      // Projects returns to the gallery.
-      projectLinks.forEach(a => a.addEventListener('click', e => {
+      // Pages returns to the gallery.
+      pageLinks.forEach(a => a.addEventListener('click', e => {
         e.preventDefault();
         closeInfo();
         gallery.focus({ preventScroll: true });
