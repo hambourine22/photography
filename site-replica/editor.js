@@ -17,7 +17,9 @@
  * ───────────────────────────────────────────────────────────── */
 
 // ───── IndexedDB helpers ──────────────────────────────────────
-const DB_NAME = 'ph-replica';
+// Keys renamed for тисяча so edits made to the old placeholder copy don't
+// restore over the new content.
+const DB_NAME = 'tysyacha-site';
 const DB_STORE = 'images';
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -71,17 +73,19 @@ async function allImages() {
 }
 
 // ───── State ──────────────────────────────────────────────────
-const LS_COPY = 'ph-copy';
-const LS_COLOR = 'ph-color';
+const LS_COPY = 'tysyacha-copy';
+const LS_COLOR = 'tysyacha-color';
+// 1000 palette: pink-300, ink, blue-600, cream-200 (see styles.css tokens).
 const DEFAULT_COLORS = {
-  '--bg':      '#910d0d',
-  '--text':    '#000000',
-  '--accent':  '#910d0d',
-  '--surface': '#eacbb4',
-  '--border':  '#ffffff',
+  '--bg':      '#f3b6c8',
+  '--text':    '#191919',
+  '--accent':  '#276988',
+  '--surface': '#f3e2b6',
+  '--border':  '#191919',
 };
 const PRESETS = {
   Default:        DEFAULT_COLORS,
+  'Replica red':  { '--bg':'#910d0d', '--text':'#000000', '--accent':'#910d0d', '--surface':'#eacbb4', '--border':'#ffffff' },
   Light:          { '--bg':'#f5f1ea', '--text':'#111111', '--accent':'#9c2a2a', '--surface':'#ffffff', '--border':'#d8cfbe' },
   Dark:           { '--bg':'#0f0f10', '--text':'#f3f3f3', '--accent':'#e8b4b4', '--surface':'#1b1b1d', '--border':'#2a2a2d' },
   Warm:           { '--bg':'#b4502c', '--text':'#2a1a10', '--accent':'#2a1a10', '--surface':'#f3dcc1', '--border':'#8a3a1b' },

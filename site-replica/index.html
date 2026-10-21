@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Paul Hempstead — replica</title>
-<meta name="description" content="A plain-HTML replica of paulhempstead.com with a built-in editing GUI.">
+<title>тисяча · distance travelled</title>
+<meta name="description" content="тисяча · distance travelled. Photographs from the road, Bristol to Kyiv, 18–22 November 2024: the thousandth day.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Roboto+Condensed:wght@400;700&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body class="site">
@@ -15,13 +15,10 @@
   <!-- ─── Loading screen ─── -->
   <header class="loading-screen" id="loading-screen" aria-label="Welcome">
     <div class="loading-screen-wrapper">
-      <div class="logo-wrapper" aria-hidden="true">
-        <svg viewBox="0 0 240 300" xmlns="http://www.w3.org/2000/svg" class="stacked-logo" role="img" aria-label="PH wordmark">
-          <!-- P -->
-          <path fill="currentColor" d="M20 20 h80 a60 60 0 0 1 0 120 h-40 v120 h-40 z M60 60 v40 h40 a20 20 0 0 0 0 -40 z"/>
-          <!-- H -->
-          <path fill="currentColor" d="M140 20 h40 v100 h40 v-100 h40 v240 h-40 v-100 h-40 v100 h-40 z" transform="translate(-20,0)"/>
-        </svg>
+      <div class="logo-wrapper">
+        <h1 class="wordmark" lang="uk">тисяча</h1>
+        <p class="wordmark-sub">distance travelled</p>
+        <p class="wordmark-meta">1000 · Bristol → Kyiv · 18–22.11.2024</p>
       </div>
       <button type="button" class="enter-button" id="enter-button">
         <span class="enter-text">enter</span>
@@ -30,31 +27,37 @@
   </header>
 
   <!-- ─── Gallery (click to advance) ─── -->
-  <main id="gallery" class="gallery" tabindex="-1" aria-label="Photograph gallery, click or press space to advance">
-    <figure class="image-container center-image active" data-slot="center">
-      <img alt="Placeholder photograph, centre slot"
-           src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 1600'%3E%3Crect fill='%23c5a89b' width='1200' height='1600'/%3E%3Ctext x='50%25' y='50%25' fill='%23fff8f0' font-family='serif' font-size='60' text-anchor='middle' dominant-baseline='middle'%3Eplaceholder 01%3C/text%3E%3C/svg%3E">
+  <main id="gallery" class="gallery" tabindex="-1" aria-label="Photograph gallery, click or press the arrow keys to advance">
+    <figure class="image-container center-image active">
+      <img alt="Two cars blurred by motion on a motorway beside a grass verge and a wooded embankment, at dusk"
+           src="images/main/distance-travelled-01.jpg" width="2000" height="1346" decoding="async">
     </figure>
-    <figure class="image-container left-image active" data-slot="left">
-      <img alt="Placeholder photograph, left slot"
-           src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3E%3Crect fill='%238a7a66' width='800' height='1200'/%3E%3Ctext x='50%25' y='50%25' fill='%23fff8f0' font-family='serif' font-size='48' text-anchor='middle' dominant-baseline='middle'%3Eplaceholder 02%3C/text%3E%3C/svg%3E">
+    <figure class="image-container right-image active">
+      <img alt="A motorway bridge with a yellow-railed glass noise barrier, church spires beyond under an overcast sky"
+           src="images/main/distance-travelled-02.jpg" width="2000" height="1346" decoding="async">
     </figure>
-    <figure class="image-container right-image active" data-slot="right">
-      <img alt="Placeholder photograph, right slot"
-           src="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 1200'%3E%3Crect fill='%236b7a66' width='800' height='1200'/%3E%3Ctext x='50%25' y='50%25' fill='%23fff8f0' font-family='serif' font-size='48' text-anchor='middle' dominant-baseline='middle'%3Eplaceholder 03%3C/text%3E%3C/svg%3E">
+    <figure class="image-container">
+      <img alt="A curved noise-barrier wall above a closed gate, roadside bollards blurred in the foreground"
+           src="images/main/distance-travelled-03.jpg" width="2000" height="1346" decoding="async" loading="lazy">
+    </figure>
+    <figure class="image-container">
+      <img alt="A white lorry cab hauling a blue curtain-sided trailer, blurred by motion in the next lane"
+           src="images/main/distance-travelled-04.jpg" width="2000" height="1346" decoding="async" loading="lazy">
+    </figure>
+    <figure class="image-container left-image active">
+      <img alt="A slatted noise barrier marked with painted graffiti, seen across the carriageway and a blurred verge"
+           src="images/main/distance-travelled-05.jpg" width="2000" height="1346" decoding="async">
     </figure>
 
     <figcaption class="project-title" id="project-title" aria-live="polite">
-      <span class="project-title-copy">Blacktail Butte — Jackson, WY — 2024</span>
+      <span class="project-title-copy"><span lang="uk">тисяча</span> — distance travelled — <span class="project-count" id="project-count">01 / 05</span></span>
     </figcaption>
   </main>
 
   <!-- ─── Navigation ─── -->
   <nav class="navbar" role="navigation" aria-label="Primary">
-    <a href="#" class="svg-link" aria-label="Paul Hempstead — home">
-      <svg viewBox="0 0 480 100" xmlns="http://www.w3.org/2000/svg" class="svg-horizontal" aria-hidden="true">
-        <text x="0" y="78" fill="currentColor" font-family="EB Garamond, serif" font-size="100" font-weight="500" letter-spacing="4">PAUL</text>
-      </svg>
+    <a href="#projects" class="svg-link" aria-label="тисяча · distance travelled, home">
+      <span class="nav-wordmark" lang="uk">тисяча</span>
     </a>
     <ul class="nav-menu">
       <li><a href="#projects" class="nav-link">Projects</a></li>
@@ -65,16 +68,43 @@
   <!-- ─── Hidden-until-opened info panel (for the Info link) ─── -->
   <section id="info" class="info-panel" aria-labelledby="info-heading" hidden>
     <article>
-      <h2 id="info-heading">About</h2>
+      <p class="info-kicker">тисяча · case evac · winter 2024</p>
+      <h2 id="info-heading" tabindex="-1">distance travelled</h2>
       <p>
-        A photographer working between two cities. This replica mirrors the
-        structure and layout of a public portfolio, with placeholder copy and
-        placeholder photographs you can replace through the built-in editor.
+        <span lang="uk">Тисяча</span> means a thousand. On 19 November 2024, the
+        thousandth day of Russia's full-scale invasion of Ukraine, we were on the
+        road, driving a vehicle from Bristol to Kyiv in aid of Driving Ukraine.
       </p>
-      <h3>Representation</h3>
-      <p>Agency placeholder, Globally.</p>
-      <h3>Contact</h3>
-      <p>hello@example.com</p>
+      <p>
+        The photographs were made from the moving vehicle over five days, days
+        999 to 1003: 2 592 km, nineteen waypoints and five crossings, the last
+        of them the border between Poland and Ukraine.
+      </p>
+
+      <dl class="info-facts">
+        <div><dt>route</dt><dd>Bristol → Kyiv · <span lang="uk">Бристоль → Київ</span></dd></div>
+        <div><dt>dates</dt><dd>18–22.11.2024 · days 999–1003</dd></div>
+        <div><dt>distance</dt><dd>2 592 km, great-circle between waypoints</dd></div>
+        <div><dt>in aid of</dt><dd>Driving Ukraine</dd></div>
+      </dl>
+
+      <h3>spreads</h3>
+      <figure class="info-spread">
+        <img alt="Spread: a quoted report from Defense Intelligence of Ukraine set in a monospaced face, beside a grid of eighteen black-and-white frames of the road"
+             src="images/info/spread-01.jpg" width="2000" height="1243" loading="lazy" decoding="async">
+        <figcaption>01 · dispatch and contact sheet</figcaption>
+      </figure>
+      <figure class="info-spread">
+        <img alt="A motorway underpass: concrete pillars in shadow above a crash barrier blurred by motion"
+             src="images/info/spread-02.jpg" width="2000" height="1346" loading="lazy" decoding="async">
+        <figcaption>02 · underpass</figcaption>
+      </figure>
+      <figure class="info-spread">
+        <img alt="Spread: two frames side by side, cars passing beneath a flyover and the same underpass with its pillars"
+             src="images/info/spread-03.jpg" width="2000" height="1229" loading="lazy" decoding="async">
+        <figcaption>03 · two frames</figcaption>
+      </figure>
+
       <button type="button" class="info-close" aria-label="Close info panel">Close</button>
     </article>
   </section>
@@ -87,8 +117,10 @@
       const enter = document.getElementById('enter-button');
       const gallery = document.getElementById('gallery');
       const infoPanel = document.getElementById('info');
-      const infoLink = document.querySelector('a[href="#info"]');
-      const slots = ['left', 'center', 'right'];
+      const infoLink = document.querySelector('a.nav-link[href="#info"]');
+      const projectLinks = document.querySelectorAll('a[href="#projects"]');
+      const frames = [...gallery.querySelectorAll('.image-container')];
+      const pad = n => String(n).padStart(2, '0');
 
       // Dismiss the loading overlay.
       const dismiss = () => {
@@ -101,41 +133,64 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dismiss(); }
       });
 
-      // Click anywhere on the gallery to rotate slots.
-      let rotation = 0;
-      const rotate = () => {
-        rotation = (rotation + 1) % 3;
-        slots.forEach((s, i) => {
-          const el = gallery.querySelector(`[data-slot="${s}"]`);
-          if (!el) return;
-          const next = slots[(i + rotation) % 3];
-          el.className = `image-container ${next}-image active`;
-          el.dataset.slotCurrent = next;
+      // The current frame sits in the centre slot, its neighbours left and
+      // right; every other frame waits hidden until it comes round.
+      let index = 0;
+      const show = i => {
+        index = (i + frames.length) % frames.length;
+        frames.forEach((el, j) => {
+          const offset = (j - index + frames.length) % frames.length;
+          const slot = offset === 0 ? 'center'
+                     : offset === 1 ? 'right'
+                     : offset === frames.length - 1 ? 'left' : '';
+          el.className = slot ? `image-container ${slot}-image active` : 'image-container';
+          el.dataset.slotCurrent = slot;
         });
+        // Looked up each time: the editor can rewrite the caption's markup.
+        const counter = document.getElementById('project-count');
+        if (counter) counter.textContent = `${pad(index + 1)} / ${pad(frames.length)}`;
       };
+      show(0);
+
+      // Click anywhere on the gallery to advance.
       gallery.addEventListener('click', e => {
         // Ignore clicks on editor UI (which has its own container).
         if (e.target.closest('.editor-root')) return;
-        rotate();
+        show(index + 1);
+      });
+      gallery.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(index + 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); show(index - 1); }
       });
 
       // Info toggle.
+      const closeInfo = () => {
+        infoPanel.hidden = true;
+      };
       const openInfo = e => {
         e.preventDefault();
         infoPanel.hidden = false;
-        infoPanel.querySelector('h2').focus?.();
+        infoPanel.scrollTop = 0;
+        document.getElementById('info-heading').focus({ preventScroll: true });
       };
       infoLink?.addEventListener('click', openInfo);
       infoPanel.querySelector('.info-close').addEventListener('click', () => {
-        infoPanel.hidden = true;
+        closeInfo();
         infoLink.focus();
       });
       document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && !infoPanel.hidden) {
-          infoPanel.hidden = true;
+          closeInfo();
           infoLink.focus();
         }
       });
+
+      // Projects returns to the gallery.
+      projectLinks.forEach(a => a.addEventListener('click', e => {
+        e.preventDefault();
+        closeInfo();
+        gallery.focus({ preventScroll: true });
+      }));
     })();
   </script>
 </body>

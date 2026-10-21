@@ -1,8 +1,12 @@
-# site-replica — Paul Hempstead replica + editing GUI
+# site-replica — тисяча · distance travelled
 
-A plain-HTML / CSS / JS replica of the paulhempstead.com photography portfolio,
-built as a learning exercise. No framework. No build step. Three files, plus
-documentation.
+Photographs from the road, Bristol to Kyiv, 18–22 November 2024: тисяча, the
+thousandth day. The layout started as a plain-HTML / CSS / JS replica of the
+paulhempstead.com portfolio, built as a learning exercise; the palette and type
+now come from the 1000 design system. No framework. No build step.
+
+- `images/main/` — the gallery frames, `distance-travelled-01.jpg` to `-05.jpg`.
+- `images/info/` — the spreads shown on the Info page, `spread-01.jpg` to `-03.jpg`.
 
 ## Files
 
