@@ -38,11 +38,11 @@
     </figure>
     <figure class="image-container">
       <img alt="A curved noise-barrier wall above a closed gate, roadside bollards blurred in the foreground"
-           src="images/main/distance-travelled-03.jpg" width="2000" height="1346" decoding="async" loading="lazy">
+           src="images/main/distance-travelled-03.jpg" width="2000" height="1346" decoding="async">
     </figure>
     <figure class="image-container">
       <img alt="A white lorry cab hauling a blue curtain-sided trailer, blurred by motion in the next lane"
-           src="images/main/distance-travelled-04.jpg" width="2000" height="1346" decoding="async" loading="lazy">
+           src="images/main/distance-travelled-04.jpg" width="2000" height="1346" decoding="async">
     </figure>
     <figure class="image-container left-image active">
       <img alt="A slatted noise barrier marked with painted graffiti, seen across the carriageway and a blurred verge"
@@ -50,7 +50,7 @@
     </figure>
 
     <figcaption class="project-title" id="project-title" aria-live="polite">
-      <span class="project-title-copy"><span lang="uk">тисяча</span> — distance travelled — <span class="project-count" id="project-count">01 / 05</span></span>
+      <span class="project-title-copy"><span lang="uk">тисяча</span> — distance travelled<span class="project-count" id="project-count"> — 01 / 05</span></span>
     </figcaption>
   </main>
 
@@ -88,7 +88,7 @@
         <div><dt>in aid of</dt><dd>Driving Ukraine</dd></div>
       </dl>
 
-      <h3>spreads</h3>
+      <h3 class="info-spreads-heading">spreads</h3>
       <figure class="info-spread">
         <img alt="Spread: a quoted report from Defense Intelligence of Ukraine set in a monospaced face, beside a grid of eighteen black-and-white frames of the road"
              src="images/info/spread-01.jpg" width="2000" height="1243" loading="lazy" decoding="async">
@@ -119,7 +119,7 @@
       const infoPanel = document.getElementById('info');
       const infoLink = document.querySelector('a.nav-link[href="#info"]');
       const projectLinks = document.querySelectorAll('a[href="#projects"]');
-      const frames = [...gallery.querySelectorAll('.image-container')];
+      let frames = [...gallery.querySelectorAll('.image-container')];
       const pad = n => String(n).padStart(2, '0');
 
       // Dismiss the loading overlay.
@@ -148,9 +148,37 @@
         });
         // Looked up each time: the editor can rewrite the caption's markup.
         const counter = document.getElementById('project-count');
-        if (counter) counter.textContent = `${pad(index + 1)} / ${pad(frames.length)}`;
+        if (counter) {
+          counter.hidden = !frames.length;
+          counter.textContent = ` — ${pad(index + 1)} / ${pad(frames.length)}`;
+        }
       };
       show(0);
+
+      // A frame whose file is missing leaves the rotation rather than
+      // showing a broken image; likewise a missing spread on the Info page.
+      frames.forEach(fig => {
+        const img = fig.querySelector('img');
+        const drop = () => {
+          fig.remove();
+          frames = frames.filter(f => f !== fig);
+          if (frames.length) show(Math.min(index, frames.length - 1));
+          else show(0);
+        };
+        if (img.complete && !img.naturalWidth) drop();
+        else img.addEventListener('error', drop, { once: true });
+      });
+      infoPanel.querySelectorAll('.info-spread').forEach(fig => {
+        const img = fig.querySelector('img');
+        const drop = () => {
+          fig.remove();
+          if (!infoPanel.querySelector('.info-spread')) {
+            infoPanel.querySelector('.info-spreads-heading')?.remove();
+          }
+        };
+        if (img.complete && !img.naturalWidth) drop();
+        else img.addEventListener('error', drop, { once: true });
+      });
 
       // Click anywhere on the gallery to advance.
       gallery.addEventListener('click', e => {
