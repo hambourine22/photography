@@ -4,6 +4,22 @@
  * the 1000 design system. Breakpoints: 480 / 768 / 992.
  * ───────────────────────────────────────────────────────────── */
 
+/* ─── Title face: MFred (HUX brand), titles only ─── */
+@font-face {
+  font-family: "MFred";
+  src: url("fonts/MFred2.0-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MFred";
+  src: url("fonts/MFred2.0-Heavy.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ─── Design tokens ─── */
 :root {
   /* Palette (1000) */
@@ -16,6 +32,7 @@
 
   /* Typography (1000) */
   --font-display: "Roboto Condensed", "Arial Narrow", sans-serif;
+  --font-title:   "MFred", var(--font-display);
   --font-mono:    "JetBrains Mono", ui-monospace, monospace;
   --font-sans:  system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   --fs-body:   clamp(1rem,   0.95rem + 0.2vw, 1.125rem);
@@ -96,6 +113,7 @@ body.site {
   color: var(--text);
 }
 /* The name, lowercase Cyrillic, in ink on pink: one per spread. */
+/* MFred has no Cyrillic, so the wordmark keeps the display face. */
 .wordmark {
   margin: 0;
   font-family: var(--font-display);
@@ -104,11 +122,13 @@ body.site {
   font-weight: 700;
   letter-spacing: -0.01em;
 }
+/* The title, "distance travelled", in MFred Heavy. */
 .wordmark-sub {
-  margin: var(--sp-2) 0 0;
-  font-family: var(--font-mono);
-  font-size: clamp(1rem, 0.85rem + 0.8vw, 1.5rem);
-  letter-spacing: 0.04em;
+  margin: var(--sp-3) 0 0;
+  font-family: var(--font-title);
+  font-size: clamp(1.4rem, 1rem + 1.6vw, 2.6rem);
+  font-weight: 900;
+  line-height: 1;
 }
 .wordmark-meta {
   margin: var(--sp-3) 0 0;
@@ -284,8 +304,9 @@ body:has(.info-panel:not([hidden])) .navbar {
   border-radius: var(--radius-md);
 }
 .info-panel h2 {
-  font-family: var(--font-display);
+  font-family: var(--font-title);
   font-size: clamp(2rem, 1.4rem + 3vw, 4rem);
+  font-weight: 900;
   line-height: 0.95;
   margin: 0 0 var(--sp-4);
 }
