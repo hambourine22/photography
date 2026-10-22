@@ -22,8 +22,6 @@ export class Guidance {
 
         this._seed()
         this._makeGrain()
-        this.resize()
-        window.addEventListener('resize', () => this.resize())
     }
 
     // ── Scatter · dots, target rings and тисяча marks ─────────────────────────
@@ -50,15 +48,20 @@ export class Guidance {
             img.data[i + 3] = 255
         }
         g.putImageData(img, 0, 0)
+        this.tile = c                                   // the exporter lays the same tile over its frames
         this.grain.style.backgroundImage = `url(${c.toDataURL()})`
     }
 
+    // sized to the stage, at the renderer's pixel ratio (the export size when framed)
     resize() {
-        const dpr = Math.min(window.devicePixelRatio, 2)
-        this.W = window.innerWidth
-        this.H = window.innerHeight
-        this.canvas.width  = Math.round(this.W * dpr)
-        this.canvas.height = Math.round(this.H * dpr)
+        const { w, h } = this.app.view
+        const dpr = this.app.renderer.getPixelRatio()
+        this.W = w
+        this.H = h
+        this.canvas.width  = Math.round(w * dpr)
+        this.canvas.height = Math.round(h * dpr)
+        this.canvas.style.width  = `${w}px`
+        this.canvas.style.height = `${h}px`
         this.dpr = dpr
     }
 
@@ -115,17 +118,24 @@ export class Guidance {
 
     // Full-height hairlines at the route plane's day boundaries, labelled at
     // the head of the screen like the reference's column codes.
+    // the day number is set in MFred, the leg code before it in mono
     _columns(alpha, pal) {
         const { ctx, H } = this
-        ctx.font = '500 9px "JetBrains Mono", monospace'
-        ctx.textAlign = 'center'
+        const mono = '500 9px "JetBrains Mono", monospace', mf = '700 10px "MFred", "JetBrains Mono", monospace'
+        ctx.textAlign = 'left'
         for (const c of this.app._columns()) {
             if (c.x < -2 || c.x > this.W + 2) continue
             ctx.globalAlpha = Math.min(0.6, alpha * 2.6)
             ctx.fillRect(Math.round(c.x), 0, 1, H)
+            ctx.font = mono
+            const wPre = ctx.measureText(c.pre).width
+            ctx.font = mf
+            const wNum = ctx.measureText(c.num).width
+            const x = c.x - (wPre + wNum) / 2
             ctx.globalAlpha = Math.min(1, alpha * 6)
             ctx.fillStyle = pal.muted
-            ctx.fillText(c.label, c.x, 12)
+            ctx.font = mono; ctx.fillText(c.pre, x, 12)
+            ctx.font = mf;   ctx.fillText(c.num, x + wPre, 12)
             ctx.fillStyle = pal.text
         }
     }
@@ -151,10 +161,10 @@ export class Guidance {
         const { ctx, W } = this
         const r = this.app._safeRect()
         const vals = this.app._edgeValues()
-        ctx.font = '500 10px "JetBrains Mono", monospace'
         ctx.fillStyle = pal.text
         vals.forEach((v, i) => {
             const y = r.t + [0.08, 0.36, 0.7, 0.78][i] * (r.b - r.t)
+            ctx.font = i === 2 ? '700 11px "MFred", "JetBrains Mono", monospace' : '500 10px "JetBrains Mono", monospace'
             ctx.globalAlpha = 0.85
             ctx.textAlign = 'left';  ctx.fillText(v, 14, y)
             ctx.textAlign = 'right'; ctx.fillText(v, W - 14, y)

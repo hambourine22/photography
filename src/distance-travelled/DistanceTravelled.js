@@ -8,6 +8,7 @@ import { LineSegmentsGeometry }       from 'three/examples/jsm/lines/LineSegment
 import { LineMaterial }               from 'three/examples/jsm/lines/LineMaterial.js'
 import { TOTAL_KM, WAYPOINTS, DAYS, LEGS, CROSSINGS, FRAMES } from './data.js'
 import { Guidance } from './Guidance.js'
+import { Exporter } from './Exporter.js'
 
 // ── Palettes ──────────────────────────────────────────────────────────────────
 // guidance — the instrument references: white hairlines on black.
@@ -31,6 +32,8 @@ const RISE      = 1.6                  // route plane grows up and down in space
 const DROP      = 1.7                  //   mode, to hold the map
 const KEY_W     = 13                   // key sheet width (1300 CSS px)
 const CAM_DIST  = 150
+const FRAME     = { w: 720, h: 900 }   // the 4:5 stage, laid out at a fixed size so every export composes alike
+const EXPORT_SIZES = { 1080: [1080, 1350], 1440: [1440, 1800], 2160: [2160, 2700] }
 const TIERS     = { long: 2.3, mid: 1.7, short: 1.1 }
 const LEAN      = Math.PI / 3          // leaders lean at 60° from the datum
 const BAR_KM    = 0.0075               // segment bars: 100 km = 0.75 units
@@ -478,7 +481,7 @@ const GLYPHS = [
 
 function keyMarkup() {
     const days = DAYS.map((D, i) => `
-        <tr data-day="${i}"><th scope="row">${D.n}</th><td>${D.date} ${D.short}</td><td>${D.leg}</td><td class="n">${D.to - D.from}</td><td>${D.span}</td></tr>`).join('')
+        <tr data-day="${i}"><th scope="row"><span class="mf">${D.n}</span></th><td>${D.date} ${D.short}</td><td>${D.leg}</td><td class="n">${D.to - D.from}</td><td>${D.span}</td></tr>`).join('')
     const legs = LEGS.map((g, i) => `
         <tr data-leg="${i}"><th scope="row">${g.code}</th><td>${g.from} → ${g.to}</td><td>${g.dir.replace(/ /g, '')} ${g.deg}°</td><td class="n">${g.end - g.start}</td></tr>`).join('')
     const wpRow = (w, i) => `
@@ -631,6 +634,15 @@ export class DistanceTravelled {
             grain         : 0.14,
             backdrop      : 0.12,
             details       : true,
+            // export · 4:5
+            frame         : false,
+            exportSize    : '1080',
+            fps           : 30,
+            clip          : 'journey',
+            restart       : true,
+            camMove       : false,
+            ease          : 'sine.inOut',
+            exportStatus  : 'frame 4:5, compose, then record',
         }
         if (this.reduced) Object.assign(this.params, { play: false, travelled: TOTAL_KM, tour: false })
 
@@ -639,6 +651,12 @@ export class DistanceTravelled {
         this.lw       = { ...LAYOUTS.sheet }
         this.targetLW = { ...LAYOUTS.sheet }
         this.offsets  = STRATA.map(() => DAYS.map(() => new THREE.Vector3()))
+        this.$stage   = document.querySelector('.stage')
+        this.$tag     = document.querySelector('.frame-tag')
+        this.view     = { w: window.innerWidth, h: window.innerHeight, s: 1 }
+        this.themeVersion = 0
+        this.keyVersion   = 0
+        this.hudDirty     = true
 
         this._initRenderer()
         this._initCamera()
@@ -651,6 +669,8 @@ export class DistanceTravelled {
         this._initGUI()
         this._initHUD()
         this.guidance = new Guidance(this)
+        this.exporter = new Exporter(this)
+        this._layout()
         this._initResize()
         this._initKeys()
 
@@ -670,17 +690,17 @@ export class DistanceTravelled {
     _initRenderer() {
         this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true })
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-        this.renderer.setSize(window.innerWidth, window.innerHeight)
+        this.renderer.setSize(this.view.w, this.view.h)
         this.renderer.setClearColor(0x000000, 0)    // the page ground and backdrop show through
 
         this.cssRenderer = new CSS3DRenderer({ element: document.querySelector('.css3d') })
-        this.cssRenderer.setSize(window.innerWidth, window.innerHeight)
+        this.cssRenderer.setSize(this.view.w, this.view.h)
     }
 
     // ── Camera ────────────────────────────────────────────────────────────────
     // Orthographic, frustum in CSS px: camera.zoom is px per world unit.
     _initCamera() {
-        const w = window.innerWidth, h = window.innerHeight
+        const { w, h } = this.view
         this.camera = new THREE.OrthographicCamera(-w / 2, w / 2, h / 2, -h / 2, 0.1, 1000)
         this.camera.position.set(L / 2, 0, CAM_DIST)
         this.camera.zoom = 30
@@ -854,7 +874,7 @@ export class DistanceTravelled {
                 { anchor: 'ml', cls: 'lbl-wp', rot: LEAN })
         })
         DAYS.forEach((D, d) => {
-            label(`<div class="lbl-day">день ${D.n}</div><div class="lbl-sm">${D.date} · ${D.dow}</div><div class="lbl-sm">${D.to - D.from} км · ${D.note}</div>`,
+            label(`<div class="lbl-day">день <span class="mf">${D.n}</span></div><div class="lbl-sm">${D.date} · ${D.dow}</div><div class="lbl-sm">${D.to - D.from} км · ${D.note}</div>`,
                 D.from, 0.14, 6.05, 0, { d, dyS: RISE, t: D.from })
         })
 
@@ -877,7 +897,7 @@ export class DistanceTravelled {
                 const k = kmOfTime(d + q / 4)
                 line(S.rulerT, k, 0, 0, RY, 0, RY + (q === 2 ? 0.08 : 0.05), { ...ro, d })
             }
-            label(`день ${D.n} · ${D.date.slice(0, 5)}`, kmOfTime(d + 0.5), 0, RY - 0.08, 0, { ...ro, d },
+            label(`день <span class="mf">${D.n}</span> · ${D.date.slice(0, 5)}`, kmOfTime(d + 0.5), 0, RY - 0.08, 0, { ...ro, d },
                 { anchor: 'tc', cls: 'lbl-ruler', fade: fadeT })
         })
         line(S.rulerT, TOTAL_KM, 0, 0, RY, 0, RY + 0.14, ro)
@@ -965,7 +985,7 @@ export class DistanceTravelled {
 
         // ── 06 · dispatches ──
         DAYS.forEach((D, d) => {
-            label(`<div class="lbl-disp-h">день ${D.n}<br>${D.date}</div><div class="lbl-src">[SOURCE]</div><div class="lbl-disp">[QUOTED REPORT FOR ${d === 1 ? 'THE THOUSANDTH DAY' : d === 4 ? 'THE DAY OF ARRIVAL AT Т19' : 'THIS DAY'}]</div>`,
+            label(`<div class="lbl-disp-h">день <span class="mf">${D.n}</span><br>${D.date}</div><div class="lbl-src">[SOURCE]</div><div class="lbl-disp">[QUOTED REPORT FOR ${d === 1 ? 'THE THOUSANDTH DAY' : d === 4 ? 'THE DAY OF ARRIVAL AT Т19' : 'THIS DAY'}]</div>`,
                 D.from, 0.14, 0.35, 5, { d, t: D.from }, { width: 250 })
         })
 
@@ -1010,8 +1030,8 @@ export class DistanceTravelled {
         S.guide.dynamic = S.guide.detail = true
 
         // day boundaries of the route plane, for the backdrop's columns
-        this.columnV = [...DAYS.map((D, d) => ({ v: vtx(D.from, 0, 0, 0, { d }), label: `${D.leg} · ${D.n}` })),
-                        { v: vtx(TOTAL_KM, 0, 0, 0), label: 'Т19' }]
+        this.columnV = [...DAYS.map((D, d) => ({ v: vtx(D.from, 0, 0, 0, { d }), pre: `${D.leg} · `, num: String(D.n) })),
+                        { v: vtx(TOTAL_KM, 0, 0, 0), pre: 'Т19', num: '' }]
         this.headLabel = this._label('', vtx(0, 0, STRATA[0].top + 0.1, 0, { dyS: RISE }), { anchor: 'bc', cls: 'lbl-head' })
         this.headLabel.dyn = true
 
@@ -1109,6 +1129,7 @@ export class DistanceTravelled {
     _markKey(kind, now, doneUpTo) {
         if (this.keyState[kind] === `${now}:${doneUpTo}`) return
         this.keyState[kind] = `${now}:${doneUpTo}`
+        this.keyVersion++
         this.keyRows[kind].forEach((row, i) => {
             row.classList.toggle('is-now',  i === now)
             row.classList.toggle('is-next', i > doneUpTo && i !== now)
@@ -1249,7 +1270,7 @@ export class DistanceTravelled {
             y0 = Math.min(y0, py); y1 = Math.max(y1, py)
             zs += q.dot(z)
         }
-        const r = this._safeRect(), W = window.innerWidth, H = window.innerHeight
+        const r = this._safeRect(), W = this.view.w, H = this.view.h
         const zoom = Math.max(2, Math.min((r.r - r.l) / (x1 - x0), (r.b - r.t) / (y1 - y0)))
         const cx = (x0 + x1) / 2 - ((r.l + r.r) / 2 - W / 2) / zoom
         const cy = (y0 + y1) / 2 - (H / 2 - (r.t + r.b) / 2) / zoom
@@ -1258,26 +1279,130 @@ export class DistanceTravelled {
     }
 
     _safeRect() {
-        const W = window.innerWidth, H = window.innerHeight
-        const top    = this.$title.getBoundingClientRect().bottom + 16
-        const bottom = this.$hud.getBoundingClientRect().top - 16
-        const guiW   = !this.gui._closed && W >= 760 ? this.gui.domElement.offsetWidth + 32 : 16
+        const { w: W, h: H } = this.view
+        const top    = this._local(this.$title).bottom + 16
+        const bottom = this._local(this.$hud).top - 16
+        const guiW   = !this.params.frame && !this.gui._closed && W >= 760 ? this.gui.domElement.offsetWidth + 32 : 16
         const r = { l: 16, r: W - guiW, t: top, b: bottom }
         if (r.b - r.t < 160) { r.t = 16; r.b = H - 16 }
         return r
     }
 
-    _tweenCamera(dir, target, zoom, instant) {
-        const cam = this.camera, ctl = this.controls
-        const from = { dir: cam.position.clone().sub(ctl.target).normalize(), target: ctl.target.clone(), zoom: cam.zoom }
-        const apply = t => {
-            const d = from.dir.clone().lerp(dir, t).normalize()
-            ctl.target.lerpVectors(from.target, target, t)
-            cam.position.copy(ctl.target).addScaledVector(d, CAM_DIST)
-            cam.zoom = Math.exp(THREE.MathUtils.lerp(Math.log(from.zoom), Math.log(zoom), t))
-            cam.lookAt(ctl.target)
-            cam.updateProjectionMatrix()
+    // an element's box in stage px (the framed stage is scaled to fit the window)
+    _local(el) {
+        const r = el.getBoundingClientRect(), st = this.$stage.getBoundingClientRect(), s = this.view.s
+        return { left: (r.left - st.left) / s, top: (r.top - st.top) / s, right: (r.right - st.left) / s, bottom: (r.bottom - st.top) / s }
+    }
+
+    // ── Stage · full window, or a fixed 4:5 frame scaled to fit beside the GUI ─
+    _layout() {
+        const p = this.params
+        let w = window.innerWidth, h = window.innerHeight, s = 1, left = 0, top = 0
+        if (p.frame) {
+            ({ w, h } = FRAME)
+            const guiW = this.gui._closed ? 16 : this.gui.domElement.offsetWidth + 32
+            const aw = Math.max(200, window.innerWidth - guiW - 40), ah = Math.max(250, window.innerHeight - 76)
+            s = Math.min(aw / w, ah / h)
+            left = 24 + (aw - w * s) / 2
+            top = 24 + (ah - h * s) / 2
         }
+        document.body.classList.toggle('framed', p.frame)
+        this.$stage.classList.toggle('framed', p.frame)
+        Object.assign(this.$stage.style, p.frame
+            ? { width: `${w}px`, height: `${h}px`, left: `${left}px`, top: `${top}px`, transform: `scale(${s})` }
+            : { width: '', height: '', left: '', top: '', transform: '' })
+        this.$tag.hidden = !p.frame
+        if (p.frame) {
+            const [W, H] = this.exportSize
+            this.$tag.textContent = `4:5 · ${W} × ${H} · ${this.exporter.rec ? 'recording' : 'export frame'}`
+            Object.assign(this.$tag.style, { left: `${left}px`, top: `${top + h * s + 8}px` })
+        }
+        this.view = { w, h, s }
+
+        // in the frame, the drawing buffer is the export size itself
+        const ratio = p.frame ? this.exportSize[0] / w : Math.min(window.devicePixelRatio, 2)
+        this.renderer.setPixelRatio(ratio)
+        this.renderer.setSize(w, h)
+        this.cssRenderer.setSize(w, h)
+        Object.assign(this.camera, { left: -w / 2, right: w / 2, top: h / 2, bottom: -h / 2 })
+        this.camera.updateProjectionMatrix()
+        this.controls.panSpeed = this.controls.rotateSpeed = 1 / s
+        this.particleMaterial.uniforms.uDpr.value = ratio
+        this.guidance.resize()
+        this.exporter.invalidate()
+        this.hudDirty = true
+    }
+
+    get exportSize() { return EXPORT_SIZES[this.params.exportSize] }
+    get totalKm() { return TOTAL_KM }
+
+    setFrame(on) {
+        this.params.frame = on
+        this._layout()
+        this._fit(true)
+        this._syncGUI()
+    }
+
+    status(text) { this.params.exportStatus = text }
+
+    restartJourney() {
+        this.params.travelled = 0
+        this.params.play = true
+        this.hold = 0
+    }
+
+    journeySeconds() { return TOTAL_KM / this.params.speed + 1.2 }
+
+    onRecordStart() {
+        this.ctl.record.name('■ stop recording')
+        this.ctl.frame.disable(); this.ctl.size.disable()
+        this._layout()
+    }
+
+    onRecordStop() {
+        this.ctl.record.name('● record clip')
+        this.ctl.frame.enable(); this.ctl.size.enable()
+        this._moveTween?.kill()
+        this.controls.enabled = true
+        this._layout()
+    }
+
+    // ── Camera · state, blend, keyframed move ─────────────────────────────────
+    _camState() {
+        return {
+            dir    : this.camera.position.clone().sub(this.controls.target).normalize(),
+            target : this.controls.target.clone(),
+            zoom   : this.camera.zoom,
+        }
+    }
+
+    _lerpCam(a, b, t) {
+        const cam = this.camera, ctl = this.controls
+        const d = a.dir.clone().lerp(b.dir, t).normalize()
+        ctl.target.lerpVectors(a.target, b.target, t)
+        cam.position.copy(ctl.target).addScaledVector(d, CAM_DIST)
+        cam.zoom = Math.exp(THREE.MathUtils.lerp(Math.log(a.zoom), Math.log(b.zoom), t))
+        cam.lookAt(ctl.target)
+        cam.updateProjectionMatrix()
+    }
+
+    playMove(seconds) {
+        if (!this.camStart || !this.camEnd) { this.status('set a start and an end view first'); return }
+        this._camTween?.kill()
+        this._moveTween?.kill()
+        this.controls.enabled = false
+        this._lerpCam(this.camStart, this.camEnd, 0)
+        const proxy = { t: 0 }
+        this._moveTween = gsap.to(proxy, {
+            t: 1, duration: seconds, ease: this.params.ease,
+            onUpdate   : () => this._lerpCam(this.camStart, this.camEnd, proxy.t),
+            onComplete : () => { if (!this.exporter.rec) this.controls.enabled = true },
+        })
+    }
+
+    _tweenCamera(dir, target, zoom, instant) {
+        const from = this._camState(), to = { dir, target, zoom }
+        const apply = t => this._lerpCam(from, to, t)
         this._camTween?.kill()
         if (instant) { apply(1); return }
         const proxy = { t: 0 }
@@ -1368,6 +1493,36 @@ export class DistanceTravelled {
                 this._syncGUI()
             },
         }
+        const ex = gui.addFolder('export · 4:5 instagram')
+        const shot = {
+            setStart    : () => { this.camStart = this._camState(); this.status('start view set'); if (this.camEnd) p.camMove = true },
+            setEnd      : () => { this.camEnd = this._camState(); this.status('end view set'); if (this.camStart) p.camMove = true },
+            previewMove : () => this.playMove(p.clip === 'journey' ? this.journeySeconds() : Number(p.clip)),
+            record      : () => {
+                if (!p.frame) this.setFrame(true)
+                requestAnimationFrame(() => requestAnimationFrame(() => this.exporter.record()))
+            },
+            still       : () => {
+                if (!p.frame) this.setFrame(true)
+                requestAnimationFrame(() => this.exporter.saveStill())
+            },
+        }
+        this.ctl = {}
+        this.ctl.frame = ex.add(p, 'frame').name('frame 4:5').onChange(v => this.setFrame(v))
+        this.ctl.size  = ex.add(p, 'exportSize', { '1080 × 1350 · feed': '1080', '1440 × 1800': '1440', '2160 × 2700': '2160' })
+            .name('size').onChange(() => { if (p.frame) this._layout() })
+        ex.add(p, 'fps', { '30 fps': 30, '60 fps': 60 }).name('fps')
+        ex.add(p, 'clip', { 'one journey': 'journey', '5 s': '5', '10 s': '10', '15 s': '15', '30 s': '30', '60 s': '60' }).name('length')
+        ex.add(p, 'restart').name('restart journey on record')
+        ex.add(shot, 'setStart').name('set start view')
+        ex.add(shot, 'setEnd').name('set end view')
+        ex.add(p, 'camMove').name('camera move').listen()
+        ex.add(p, 'ease', { 'sine in-out': 'sine.inOut', 'power2 in-out': 'power2.inOut', linear: 'none' }).name('ease')
+        ex.add(shot, 'previewMove').name('preview move')
+        this.ctl.record = ex.add(shot, 'record').name('● record clip')
+        ex.add(shot, 'still').name('save still (PNG)')
+        ex.add(p, 'exportStatus').name('status').disable().listen()
+
         gui.add(actions, 'replay').name('replay')
         gui.add(actions, 'scatter').name('scatter')
         gui.add(actions, 'randomize').name('randomize')
@@ -1375,7 +1530,11 @@ export class DistanceTravelled {
         this._guiClosed = this.mobile
         if (this.mobile) gui.close()
         gui.onOpenClose(() => {
-            if (gui._closed !== this._guiClosed) { this._guiClosed = gui._closed; this._fit() }
+            if (gui._closed !== this._guiClosed) {
+                this._guiClosed = gui._closed
+                if (this.params.frame) this._layout()
+                this._fit()
+            }
         })
     }
 
@@ -1416,15 +1575,17 @@ export class DistanceTravelled {
             this.particleMaterial.uniforms.uColor.value.set(PAL.text)
         }
         this._recolour = true
+        this.themeVersion++
+        this.exporter.invalidate()
         this._syncGUI()
     }
 
     // screen x of each day boundary on the route plane
     _columns() {
-        const W = window.innerWidth
+        const W = this.view.w
         return this.columnV.map(c => {
             this._place(c.v, this._tmp).project(this.camera)
-            return { x: (this._tmp.x + 1) / 2 * W, label: c.label }
+            return { x: (this._tmp.x + 1) / 2 * W, pre: c.pre, num: c.num }
         })
     }
 
@@ -1437,6 +1598,7 @@ export class DistanceTravelled {
         if (this._hudText[key] === text) return
         this._hudText[key] = text
         if (this.$r[key]) this.$r[key].textContent = text
+        this.hudDirty = true
     }
 
     _updateReadout() {
@@ -1454,7 +1616,7 @@ export class DistanceTravelled {
 
         this._set('km', fmtKm(km))
         this._set('kmSub', `з ${fmtKm(TOTAL_KM)} · ${pct}% of the route`)
-        this._set('day', `день ${D.n}`)
+        this._set('day', String(D.n))
         this._set('daySub', `${D.date} · ${D.dow} · ${dayPct}% of the day · ${nf2.format(t)} / ${DAYS.length}`)
         this._set('pos', `${fmtLat(lat)} · ${fmtLon(lon)}`)
         this._set('posSub', `${fmtKm(crow)} км від Бристоля по прямій · straight line`)
@@ -1483,12 +1645,8 @@ export class DistanceTravelled {
     // ── Resize / keys ─────────────────────────────────────────────────────────
     _initResize() {
         window.addEventListener('resize', () => {
-            const w = window.innerWidth, h = window.innerHeight
-            Object.assign(this.camera, { left: -w / 2, right: w / 2, top: h / 2, bottom: -h / 2 })
-            this.camera.updateProjectionMatrix()
-            this.renderer.setSize(w, h)
-            this.cssRenderer.setSize(w, h)
-            this._fit(true)
+            this._layout()
+            if (!this.params.frame) this._fit(true)
         })
     }
 
@@ -1585,7 +1743,7 @@ export class DistanceTravelled {
         this.controls.update()
         this.nodes.material.uniforms.uPx.value   = this.camera.zoom
         this.vehicle.material.uniforms.uPx.value = this.camera.zoom
-        for (const st of this.strokes) st.material.resolution.set(window.innerWidth, window.innerHeight)
+        for (const st of this.strokes) st.material.resolution.set(this.view.w, this.view.h)
 
         this._set('status', p.travelled >= TOTAL_KM ? 'прибуття · Т19 — arrived'
             : p.travelled < 1 ? 'дані маршруту завантажено — route data loaded'
@@ -1598,6 +1756,7 @@ export class DistanceTravelled {
             this.update(Math.min(this.clock.getDelta(), 0.1))
             this.renderer.render(this.scene, this.camera)
             this.cssRenderer.render(this.cssScene, this.camera)
+            if (this.exporter.active) this.exporter.afterRender()
             requestAnimationFrame(tick)
         }
         tick()

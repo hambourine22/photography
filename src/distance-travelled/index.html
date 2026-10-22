@@ -44,22 +44,50 @@
             font-family: var(--mono);
         }
 
-        /* backdrop (guidance fan, columns, marks) → WebGL → CSS3D type → overlays */
-        canvas.backdrop, canvas.webgl, .css3d {
+        /* ── Stage · the whole window, or a fixed 720 × 900 (4:5) frame scaled
+              to fit beside the GUI for Instagram export ───────────────────── */
+        .stage {
             position: fixed;
             inset: 0;
+            overflow: hidden;
+            background: var(--ground);
+            container-type: inline-size;
+        }
+        .stage.framed {
+            right: auto;
+            bottom: auto;
+            transform-origin: 0 0;
+            outline: 1px solid rgba(255, 255, 255, 0.16);
+        }
+        body.framed { background: #1b1b1b; }
+        .frame-tag {
+            position: fixed;
+            font: 500 10px/14px var(--mono);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #8f8f8f;
+            pointer-events: none;
+        }
+        .export-host { position: fixed; left: -40000px; top: 0; pointer-events: none; }
+
+        /* backdrop (guidance fan, columns, marks) → WebGL → CSS3D type → overlays */
+        canvas.backdrop, canvas.webgl, .css3d {
+            position: absolute;
+            left: 0;
+            top: 0;
             display: block;
-            width: 100%;
-            height: 100%;
         }
         canvas.backdrop, .css3d { pointer-events: none; }
         canvas.webgl { touch-action: none; }
 
+        /* MFred carries the day numbers 999–1003 wherever they head a day */
+        .mf { font-family: var(--title); font-weight: 700; letter-spacing: 0.01em; }
+
         /* ── Grain · a noise tile stepped about, over everything but the GUI ─ */
         .grain {
-            position: fixed;
+            position: absolute;
             inset: -50%;
-            z-index: 1000;
+            z-index: 5;
             pointer-events: none;
             background-size: 256px 256px;
             opacity: 0.14;
@@ -77,10 +105,10 @@
 
         /* ── Title ───────────────────────────────────────────────────────── */
         .dt-title {
-            position: fixed;
+            position: absolute;
             left: var(--gutter);
             top: 26px;
-            max-width: calc(100vw - 380px);
+            max-width: calc(100cqw - 380px);
             pointer-events: none;
         }
         .dt-title .run { font: 500 10px/14px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
@@ -92,11 +120,11 @@
            sizes to its content; text that runs long wraps and the component
            grows upward instead. */
         .hud {
-            position: fixed;
+            position: absolute;
             left: var(--gutter);
             right: var(--gutter);
             bottom: var(--gutter);
-            width: calc(100vw - 2 * var(--gutter));
+            width: calc(100cqw - 2 * var(--gutter));
             display: grid;
             grid-template-columns: repeat(6, minmax(0, 1fr));
             column-gap: 20px;
@@ -134,13 +162,18 @@
 
         /* keep the GUI clear of the bottom component, however tall it grows */
         .lil-gui.root.autoPlace { max-height: calc(100% - var(--hud-h, 120px) - 2 * var(--gutter)); }
+        body.framed .lil-gui.root.autoPlace { max-height: 100%; }
 
-        @media (max-width: 1180px) {
+        /* the readout answers to the stage's width, so the 4:5 frame composes
+           like a phone-width screen */
+        @container (max-width: 1180px) {
             .hud { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
-        @media (max-width: 760px) {
-            :root { --gutter: 8px; }
-            .dt-title { top: 44px; max-width: calc(100vw - 2 * var(--gutter)); }
+        @container (max-width: 560px) {
+            .dt-title, .hud { --gutter: 8px; }
+        }
+        @container (max-width: 760px) {
+            .dt-title { top: 44px; max-width: calc(100cqw - 2 * var(--gutter)); }
             .dt-title h1 { font-size: 21px; }
             .dt-title .sub { display: none; }
             .hud { column-gap: 10px; }
@@ -151,6 +184,8 @@
             .hud .strip .status { order: -1; text-align: left; }
             .hud .strip .code, .hud .strip .desk { display: none; }
         }
+        .stage.framed .dt-title { top: 30px; }
+        .stage.framed .dt-title h1 { font-size: 34px; }
 
         /* ── 3D labels · sized in CSS px, scaled into the planes ─────────── */
         .dt-a { position: absolute; width: 0; height: 0; backface-visibility: hidden; }
@@ -234,6 +269,7 @@
     </style>
 </head>
 <body>
+    <main class="stage">
     <canvas class="backdrop" aria-hidden="true"></canvas>
     <canvas class="webgl" aria-label="Animated route sheet: Bristol to Kyiv, 2 592 km over five days, drawn against distance, time or space"></canvas>
     <div class="css3d"></div>
@@ -252,7 +288,7 @@
         </div>
         <div class="cell">
             <span class="lab">час · time</span>
-            <span class="val" data-r="day"></span>
+            <span class="val">день <span class="mf" data-r="day"></span></span>
             <span class="sub" data-r="daySub"></span>
         </div>
         <div class="cell">
@@ -282,6 +318,9 @@
         </div>
     </section>
     <div class="grain" aria-hidden="true"></div>
+    </main>
+    <p class="frame-tag" hidden></p>
+    <div class="export-host" aria-hidden="true"></div>
 
     <script type="module" src="./script.js"></script>
 </body>
