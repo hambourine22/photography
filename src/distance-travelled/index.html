@@ -20,8 +20,17 @@
             --rule-thin : color-mix(in srgb, var(--text) 22%, transparent);
             --veil      : color-mix(in srgb, var(--ground) 84%, transparent);
             --gutter    : 16px;
+            --title     : 'MFred', 'JetBrains Mono', ui-monospace, monospace;
             --mono      : 'JetBrains Mono', ui-monospace, monospace;
             --type      : 'PT Mono', 'Courier New', monospace;
+        }
+
+        /* MFred · the primary title face (Latin only; Cyrillic stays in JetBrains Mono) */
+        @font-face {
+            font-family: 'MFred';
+            src: url('../fonts/MFred2.0-Heavy.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -75,7 +84,7 @@
             pointer-events: none;
         }
         .dt-title .run { font: 500 10px/14px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-        .dt-title h1   { font: 700 30px/1.05 var(--mono); letter-spacing: -0.02em; margin: 6px 0 6px; }
+        .dt-title h1   { font: 700 32px/1 var(--title); letter-spacing: 0.01em; text-transform: uppercase; margin: 8px 0 8px; }
         .dt-title .sub { font: 400 11px/15px var(--mono); color: var(--muted); }
 
         /* ── Bottom component · readout ──────────────────────────────────────
@@ -132,7 +141,7 @@
         @media (max-width: 760px) {
             :root { --gutter: 8px; }
             .dt-title { top: 44px; max-width: calc(100vw - 2 * var(--gutter)); }
-            .dt-title h1 { font-size: 20px; }
+            .dt-title h1 { font-size: 21px; }
             .dt-title .sub { display: none; }
             .hud { column-gap: 10px; }
             .hud .cell--x, .hud .sub { display: none; }
