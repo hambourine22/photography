@@ -7,16 +7,17 @@ import { LineSegments2 }              from 'three/examples/jsm/lines/LineSegment
 import { LineSegmentsGeometry }       from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 import { LineMaterial }               from 'three/examples/jsm/lines/LineMaterial.js'
 import { TOTAL_KM, WAYPOINTS, DAYS, LEGS, CROSSINGS, FRAMES } from './data.js'
+import { Guidance } from './Guidance.js'
 
-// ── 1000 design tokens · night theme ──────────────────────────────────────────
-// Flag blue and yellow mark two things only: the crossing at М5 and Т19.
-const HEX = {
-    ground   : '#141414',
-    text     : '#f3e2b6',
-    muted    : '#a8a092',
-    uaBlue   : '#0057b7',
-    uaYellow : '#ffd700',
+// ── Palettes ──────────────────────────────────────────────────────────────────
+// guidance — the instrument references: white hairlines on black.
+// night    — the 1000 tokens: cream on #141414.
+// In both, flag blue and yellow mark two things only: М5 and Т19.
+const THEMES = {
+    guidance : { ground: '#000000', text: '#ffffff', muted: '#8f8f8f', uaBlue: '#0057b7', uaYellow: '#ffd700' },
+    night    : { ground: '#141414', text: '#f3e2b6', muted: '#a8a092', uaBlue: '#0057b7', uaYellow: '#ffd700' },
 }
+const PAL = { ...THEMES.guidance }
 
 // ── Scale ─────────────────────────────────────────────────────────────────────
 const KM        = 0.01                 // world units per km · 1 unit = 100 km
@@ -169,13 +170,17 @@ function reanchor(v, k) {
 
 // ── Strokes · one LineSegments2 per line style ────────────────────────────────
 class Strokes {
-    constructor(color, opacity = 1, fade = null) {
-        this.color   = new THREE.Color(color)
+    constructor(key, opacity = 1, fade = null, weight = 1) {
+        this.key     = key
+        this.color   = new THREE.Color(PAL[key])
         this.opacity = opacity
         this.fade    = fade
+        this.weight  = weight            // the reticle runs heavier than the hairlines
         this.v       = []
         this.dynamic = false
     }
+
+    retheme() { this.color.set(PAL[this.key]) }
 
     seg(a, b) { this.v.push(a, b) }
 
@@ -221,8 +226,8 @@ class Strokes {
         }
         const op = this.opacity * p.lineOpacity * (this.fade ? this.fade() : 1)
         this.material.opacity   = op
-        this.material.linewidth = p.lineWidth
-        this.mesh.visible       = p.showLines && op > 0.003
+        this.material.linewidth = p.lineWidth * this.weight
+        this.mesh.visible       = p.showLines && op > 0.003 && (!this.detail || p.details)
     }
 }
 
@@ -264,16 +269,36 @@ const nodeFragment = /* glsl */`
     varying vec3  vFill;
     varying float vLit;
 
+    // equilateral triangle, centred, after Quilez
+    float sdTriangle(vec2 p, float r) {
+        const float k = 1.7320508;
+        p.x = abs(p.x) - r;
+        p.y = p.y + r / k;
+        if (p.x + k * p.y > 0.0) p = vec2(p.x - k * p.y, -k * p.x - p.y) / 2.0;
+        p.x -= clamp(p.x, -2.0 * r, 0.0);
+        return -length(p) * sign(p.y);
+    }
+
     void main() {
         float d    = length(gl_PointCoord - 0.5) * vSize;
         float fill = 1.0 - smoothstep(vR - 0.6 * uDpr, vR + 0.6 * uDpr, d);
         float ring = 1.0 - smoothstep(0.5 * uDpr, 1.4 * uDpr, abs(d - vR));
 
         // 0: filled dot · 1: 1px ring · 2: filled disc with a 1px ring
+        // 3: target, a ring around a dot · 4: solid triangle, apex up
         vec3  col = vColor;
         float a   = fill;
         if (vKind > 0.5 && vKind < 1.5) { a = ring; }
-        if (vKind > 1.5) { col = mix(vFill, vColor, ring); a = max(fill, ring); }
+        if (vKind > 1.5 && vKind < 2.5) { col = mix(vFill, vColor, ring); a = max(fill, ring); }
+        if (vKind > 2.5 && vKind < 3.5) {
+            float dot = 1.0 - smoothstep(vR * 0.42 - 0.6 * uDpr, vR * 0.42 + 0.6 * uDpr, d);
+            a = max(ring, dot);
+        }
+        if (vKind > 3.5) {
+            vec2 q = (gl_PointCoord - 0.5) * vSize;
+            q.y = -q.y;
+            a = 1.0 - smoothstep(-0.6 * uDpr, 0.6 * uDpr, sdTriangle(q, vR * 0.86));
+        }
 
         a *= uOpacity;
         if (a < 0.01) discard;
@@ -285,8 +310,17 @@ const nodeFragment = /* glsl */`
 class Nodes {
     constructor() { this.items = []; this.dynamic = false }
 
-    add(v, r, kind, color, fill = HEX.ground) {
-        this.items.push({ v, r, kind, color: new THREE.Color(color), fill: new THREE.Color(fill) })
+    add(v, r, kind, color = 'text', fill = 'ground') {
+        this.items.push({ v, r, kind, key: color, fillKey: fill, color: new THREE.Color(PAL[color]), fill: new THREE.Color(PAL[fill]) })
+    }
+
+    retheme() {
+        const col = this.geometry.attributes.aColor, fill = this.geometry.attributes.aFill
+        this.items.forEach((it, i) => {
+            it.color.set(PAL[it.key]).toArray(col.array, i * 3)
+            it.fill.set(PAL[it.fillKey]).toArray(fill.array, i * 3)
+        })
+        col.needsUpdate = fill.needsUpdate = true
     }
 
     build() {
@@ -434,7 +468,7 @@ const particleFragment = /* glsl */`
 const GLYPHS = [
     ['origin',      'початок · start of a leg',      '<circle cx="20" cy="20" r="9"/><circle cx="20" cy="20" r="3.5" fill="currentColor" stroke="none"/>'],
     ['waypoint',    'точка · a point on the route, Т', '<path d="M2 20 H38"/><circle cx="20" cy="20" r="4" fill="currentColor" stroke="none"/>'],
-    ['destination', 'Київ · Т19',                     `<circle cx="20" cy="20" r="16" stroke="${HEX.uaYellow}"/><circle cx="20" cy="20" r="7" fill="${HEX.uaBlue}" stroke="${HEX.uaYellow}"/>`],
+    ['destination', 'Київ · Т19',                     `<circle cx="20" cy="20" r="16" stroke="${PAL.uaYellow}"/><circle cx="20" cy="20" r="7" fill="${PAL.uaBlue}" stroke="${PAL.uaYellow}"/>`],
     ['border',      'перехід · a crossing, М',         '<path d="M2 20 H16 M24 20 H38 M11 8 H16 V32 H11 M29 8 H24 V32 H29"/>'],
     ['ferry',       'пором · the sea crossing М1',     '<path d="M2 20 H38" stroke-dasharray="6 5"/>'],
     ['bearing',     'азимут · a leg heading',          '<circle cx="20" cy="20" r="15" stroke-width="0.5"/><path d="M20 5 V1 M15 17 L33 27.5"/><circle cx="20" cy="20" r="2" fill="currentColor" stroke="none"/>'],
@@ -591,7 +625,12 @@ export class DistanceTravelled {
             alphaTail     : 0.03,
             fade          : 600,
             blend         : 'add',
-            colour        : HEX.text,
+            colour        : PAL.text,
+            // art direction
+            theme         : 'guidance',
+            grain         : 0.14,
+            backdrop      : 0.12,
+            details       : true,
         }
         if (this.reduced) Object.assign(this.params, { play: false, travelled: TOTAL_KM, tour: false })
 
@@ -611,6 +650,7 @@ export class DistanceTravelled {
         this._buildParticles()
         this._initGUI()
         this._initHUD()
+        this.guidance = new Guidance(this)
         this._initResize()
         this._initKeys()
 
@@ -628,10 +668,10 @@ export class DistanceTravelled {
     // WebGL draws the line work and particles; a CSS3D layer on top carries the
     // type, so labels set in JetBrains Mono / PT Mono stay crisp at any zoom.
     _initRenderer() {
-        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true })
+        this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas, antialias: true, alpha: true })
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
         this.renderer.setSize(window.innerWidth, window.innerHeight)
-        this.renderer.setClearColor(HEX.ground)
+        this.renderer.setClearColor(0x000000, 0)    // the page ground and backdrop show through
 
         this.cssRenderer = new CSS3DRenderer({ element: document.querySelector('.css3d') })
         this.cssRenderer.setSize(window.innerWidth, window.innerHeight)
@@ -703,20 +743,22 @@ export class DistanceTravelled {
     // ── Marks ─────────────────────────────────────────────────────────────────
     _buildMarks() {
         const S = this.S = {
-            cells     : new Strokes(HEX.text, 0.16),
-            slabs     : new Strokes(HEX.text, 0.16, () => this.lw.days),
-            route     : new Strokes(HEX.text, 1),
-            ferry     : new Strokes(HEX.text, 0.9),
-            border    : new Strokes(HEX.uaYellow, 1),
-            leaders   : new Strokes(HEX.text, 0.7),
-            marks     : new Strokes(HEX.text, 0.9),
-            thin      : new Strokes(HEX.text, 0.55),
-            grid      : new Strokes(HEX.text, 0.3),
-            rulerD    : new Strokes(HEX.text, 0.85, () => this.w.D),
-            rulerT    : new Strokes(HEX.text, 0.85, () => this.w.T),
-            rulerS    : new Strokes(HEX.text, 0.85, () => this.w.S),
-            graticule : new Strokes(HEX.text, 0.16, () => this.w.S),
-            playhead  : new Strokes(HEX.text, 0.75),
+            cells     : new Strokes('text', 0.16),
+            slabs     : new Strokes('text', 0.16, () => this.lw.days),
+            route     : new Strokes('text', 1),
+            ferry     : new Strokes('text', 0.9),
+            border    : new Strokes('uaYellow', 1),
+            leaders   : new Strokes('text', 0.7),
+            marks     : new Strokes('text', 0.9),
+            thin      : new Strokes('text', 0.55),
+            grid      : new Strokes('text', 0.3),
+            rulerD    : new Strokes('text', 0.85, () => this.w.D),
+            rulerT    : new Strokes('text', 0.85, () => this.w.T),
+            rulerS    : new Strokes('text', 0.85, () => this.w.S),
+            graticule : new Strokes('text', 0.16, () => this.w.S),
+            playhead  : new Strokes('text', 0.75),
+            reticle   : new Strokes('text', 0.95, null, 2.2),
+            guide     : new Strokes('text', 0.4),
         }
         const N = this.nodes = new Nodes()
         const fadeD = () => this.w.D, fadeT = () => this.w.T, fadeS = () => this.w.S
@@ -796,13 +838,13 @@ export class DistanceTravelled {
         WP.forEach((w, i) => {
             const o = { fy: true, t: w.km }
             if (i === 0) {
-                N.add(vtx(w.km, 0, 0, 0, o), 0.13, 2, HEX.text)
-                N.add(vtx(w.km, 0, 0, 0, o), 0.05, 0, HEX.text)
+                N.add(vtx(w.km, 0, 0, 0, o), 0.13, 2)
+                N.add(vtx(w.km, 0, 0, 0, o), 0.05, 0)
             } else if (i === WP.length - 1) {
-                N.add(vtx(w.km, 0, 0, 0, o), 0.27, 1, HEX.uaYellow)
-                N.add(vtx(w.km, 0, 0, 0, o), 0.12, 2, HEX.uaYellow, HEX.uaBlue)
+                N.add(vtx(w.km, 0, 0, 0, o), 0.27, 1, 'uaYellow')
+                N.add(vtx(w.km, 0, 0, 0, o), 0.12, 2, 'uaYellow', 'uaBlue')
             } else {
-                N.add(vtx(w.km, 0, 0, 0, o), 0.055, 0, HEX.text)
+                N.add(vtx(w.km, 0, 0, 0, o), 0.085, 3)      // target, as the reference marks its codes
             }
             const h = TIERS[w.tier], lx = h / Math.tan(LEAN)
             dashed(S.leaders, w.km, 0, 0, i === 0 ? 0.14 : 0, lx, h, o)
@@ -868,7 +910,11 @@ export class DistanceTravelled {
             line(S.marks, g.start, 1, cx, cy + r, cx, cy + r + 0.09, o)
             const a = g.deg * Math.PI / 180, ux = Math.sin(a), uy = Math.cos(a)
             line(S.marks, g.start, 1, cx - ux * r * 0.33, cy - uy * r * 0.33, cx + ux * r * 0.87, cy + uy * r * 0.87, o)
-            N.add(vtx(g.start, cx, cy, 1, o), 0.028, 0, HEX.text)
+            N.add(vtx(g.start, cx, cy, 1, o), 0.028, 0)
+            N.add(vtx(g.start, cx + ux * r, cy + uy * r, 1, o), 0.05, 3)
+            for (let q = 0; q < 4; q++) {
+                N.add(vtx(g.start, cx + Math.sin(q * Math.PI / 2) * r, cy + Math.cos(q * Math.PI / 2) * r, 1, o), 0.018, 0)
+            }
             label(`<div class="lbl-dir">${g.dir}</div><div class="lbl-deg">${g.deg}°</div>`,
                 g.start, cx + r + 0.15, cy + 0.42, 1, o)
             const note = g.code === 'Е4' ? ' · split at Т15 across days 1002 / 1003' : ''
@@ -886,7 +932,7 @@ export class DistanceTravelled {
             if (i === 0) return
             const h = (w.km - WP[i - 1].km) * BAR_KM, o = { t: w.km }
             line(S.marks, w.km, 2, 0, 0, 0, h, o)
-            N.add(vtx(w.km, 0, h, 2, o), 0.03, 0, HEX.text)
+            N.add(vtx(w.km, 0, h, 2, o), 0.03, 0)
         })
         label('найдовший перегін · longest run<br>POZNAŃ → KRAKÓW · 335 км', 1792, 0.12, 335 * BAR_KM, 2, { t: 1792 }, { cls: 'lbl-sm' })
         label('найкоротший · shortest<br>KÖLN → DÜSSELDORF · 35 км', 725, 0.1, 0.36 + 35 * BAR_KM, 2, { t: 725 }, { anchor: 'bl', cls: 'lbl-sm' })
@@ -898,7 +944,7 @@ export class DistanceTravelled {
             label(lat === 52 ? '52° пн. ш.' : `${lat}°`, 0, -0.12, (lat - LAT_BASE) * LAT_UNIT, 3, {}, { anchor: 'mr', cls: 'lbl-ruler' })
         })
         run(S.marks, 0, TOTAL_KM, 3, { dyAt: latY })
-        WP.forEach(w => N.add(vtx(w.km, 0, latY(w.km), 3, { t: w.km }), 0.035, 0, HEX.text))
+        WP.forEach(w => N.add(vtx(w.km, 0, latY(w.km), 3, { t: w.km }), 0.035, 0))
         label('найпівнічніша точка · northernmost<br>BERLIN Т12 · 52,52° пн. ш.', 1218, 0.12, latY(1218) + 0.12, 3, { t: 1218 }, { anchor: 'bl', cls: 'lbl-sm' })
         label('найпівденніша · southernmost<br>LVIV Т15 · 49,84° пн. ш.', 2085, 0.1, latY(2085) - 0.1, 3, { t: 2085 }, { cls: 'lbl-sm' })
 
@@ -938,11 +984,34 @@ export class DistanceTravelled {
         })
         S.playhead.dynamic = true
 
+        // ── Vehicle · a triangle inside a broken reticle, with guide lines ahead ──
         const V = this.vehicle = new Nodes()
         V.dynamic = true
         this.vehicleV = vtx(0, 0, 0, 0, { fy: true })
-        V.add(this.vehicleV, 0.17, 2, HEX.text)
-        V.add(this.vehicleV, 0.06, 0, HEX.text)
+        V.add(this.vehicleV, 0.19, 4)
+
+        this.reticle = []
+        ;[[0, 150], [196, 334]].forEach(([a0, a1]) => {
+            const n = Math.round((a1 - a0) / 6)
+            for (let i = 0; i < n; i++) {
+                const a = { k: 0, a: a0 + (a1 - a0) * i / n }, b = { k: 0, a: a0 + (a1 - a0) * (i + 1) / n }
+                const va = vtx(0, 0, 0, 0, { fy: true }), vb = vtx(0, 0, 0, 0, { fy: true })
+                va.deg = a.a; vb.deg = b.a
+                S.reticle.seg(va, vb)
+                this.reticle.push(va, vb)
+            }
+        })
+        S.reticle.dynamic = S.reticle.detail = true
+
+        this.guideV = [vtx(0, 0, 0, 0, { fy: true }), vtx(0, 0, 0, 0, { fy: true }),
+                       vtx(0, 0, 0, 0, { fy: true }), vtx(TOTAL_KM, 0, 0, 0, { fy: true })]
+        S.guide.seg(this.guideV[0], this.guideV[1])
+        S.guide.seg(this.guideV[2], this.guideV[3])
+        S.guide.dynamic = S.guide.detail = true
+
+        // day boundaries of the route plane, for the backdrop's columns
+        this.columnV = [...DAYS.map((D, d) => ({ v: vtx(D.from, 0, 0, 0, { d }), label: `${D.leg} · ${D.n}` })),
+                        { v: vtx(TOTAL_KM, 0, 0, 0), label: 'Т19' }]
         this.headLabel = this._label('', vtx(0, 0, STRATA[0].top + 0.1, 0, { dyS: RISE }), { anchor: 'bc', cls: 'lbl-head' })
         this.headLabel.dyn = true
 
@@ -983,7 +1052,7 @@ export class DistanceTravelled {
         g.setAttribute('position', new THREE.BufferAttribute(this.fillPos, 3))
         g.setIndex(index)
         this.fills = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
-            color       : HEX.text,
+            color       : PAL.text,
             transparent : true,
             opacity     : this.params.planeFill,
             depthTest   : false,
@@ -1251,6 +1320,13 @@ export class DistanceTravelled {
         read.add(p, 'time').name('time').disable().listen()
         read.add(p, 'space').name('space').disable().listen()
 
+        const art = gui.addFolder('art direction')
+        art.add(p, 'theme', { 'guidance · black / white': 'guidance', '1000 · night': 'night' }).name('theme')
+            .onChange(v => this._applyTheme(v))
+        art.add(p, 'grain', 0, 0.35, 0.005).name('grain')
+        art.add(p, 'backdrop', 0, 0.5, 0.005).name('backdrop (guidance)')
+        art.add(p, 'details').name('details (reticle, marks)')
+
         const lines = gui.addFolder('lines')
         lines.add(p, 'showLines').name('showLines')
         lines.add(p, 'lineOpacity', 0, 1, 0.01).name('lineOpacity')
@@ -1314,6 +1390,47 @@ export class DistanceTravelled {
         this.$r     = {}
         document.querySelectorAll('[data-r]').forEach(el => { this.$r[el.dataset.r] = el })
         this._hudText = {}
+
+        // the bottom component grows with its text; keep the GUI clear of it
+        const hudH = () => document.documentElement.style.setProperty('--hud-h', `${this.$hud.offsetHeight}px`)
+        new ResizeObserver(hudH).observe(this.$hud)
+        hudH()
+    }
+
+    // ── Art direction ─────────────────────────────────────────────────────────
+    get palette() { return PAL }
+
+    _applyTheme(name) {
+        const was = PAL.text
+        Object.assign(PAL, THEMES[name])
+        const root = document.documentElement.style
+        root.setProperty('--ground', PAL.ground)
+        root.setProperty('--text', PAL.text)
+        root.setProperty('--muted', PAL.muted)
+        this.strokes.forEach(st => st.retheme())
+        this.nodes.retheme()
+        this.vehicle.retheme()
+        this.fills.material.color.set(PAL.text)
+        if (this.params.colour === was) {
+            this.params.colour = PAL.text
+            this.particleMaterial.uniforms.uColor.value.set(PAL.text)
+        }
+        this._recolour = true
+        this._syncGUI()
+    }
+
+    // screen x of each day boundary on the route plane
+    _columns() {
+        const W = window.innerWidth
+        return this.columnV.map(c => {
+            this._place(c.v, this._tmp).project(this.camera)
+            return { x: (this._tmp.x + 1) / 2 * W, label: c.label }
+        })
+    }
+
+    _edgeValues() {
+        const km = this.params.travelled, g = LEGS.find(l => km <= l.end)
+        return [fmtKm(km), fmtKm(TOTAL_KM - km), String(DAYS[dayOf(km)].n), `${g.deg}°`]
     }
 
     _set(key, text) {
@@ -1346,7 +1463,11 @@ export class DistanceTravelled {
         this._set('wp', `${w.code} ${w.name}`)
         this._set('wpSub', next ? `next ${next.code} ${next.name} · ${fmtKm(next.km - km)} км` : 'прибуття · arrived')
         this._set('cross', crossed.length ? crossed.at(-1).code : '—')
-        this._set('crossSub', ahead ? `next ${ahead.code} ${ahead.label} · ${fmtKm((ahead.ferry ? ahead.from : ahead.km) - km)} км` : 'all five crossed')
+        const aboard = ahead?.ferry && km >= ahead.from
+        this._set('crossSub', aboard ? `${ahead.code} · на поромі · on the ferry · ${fmtKm(ahead.to - km)} км to go`
+            : ahead ? `next ${ahead.code} ${ahead.label} · ${fmtKm((ahead.ferry ? ahead.from : ahead.km) - km)} км`
+            : 'all five crossed')
+        this._set('code', `1000·С002   ${g.code}   ${w.code}/19   ${String(Math.round(km)).padStart(4, '0')}   ${d + 1}/${DAYS.length}`)
 
         p.distance = `${fmtKm(km)} км · ${pct}%`
         p.time     = `день ${D.n} · ${nf2.format(t)} / ${DAYS.length}`
@@ -1423,6 +1544,20 @@ export class DistanceTravelled {
         reanchor(this.vehicleV, p.travelled)
         reanchor(this.headLabel.v, p.travelled)
 
+        // the reticle turns slowly about the vehicle; guides run to the next
+        // waypoint and on to Т19
+        const turn = this.time * 24
+        for (const v of this.reticle) {
+            reanchor(v, p.travelled)
+            const a = (v.deg + turn) * Math.PI / 180
+            v.dx = Math.cos(a) * 0.62
+            v.dy = Math.sin(a) * 0.62
+        }
+        const next = WP.find(w => w.km > p.travelled + 0.01)
+        reanchor(this.guideV[0], p.travelled)
+        reanchor(this.guideV[2], p.travelled)
+        reanchor(this.guideV[1], next ? next.km : p.travelled)
+
         for (const st of this.strokes) st.update(this, moved, recolour)
         this.nodes.update(this, moved, recolour)
         this.vehicle.update(this, true, false)
@@ -1451,6 +1586,11 @@ export class DistanceTravelled {
         this.nodes.material.uniforms.uPx.value   = this.camera.zoom
         this.vehicle.material.uniforms.uPx.value = this.camera.zoom
         for (const st of this.strokes) st.material.resolution.set(window.innerWidth, window.innerHeight)
+
+        this._set('status', p.travelled >= TOTAL_KM ? 'прибуття · Т19 — arrived'
+            : p.travelled < 1 ? 'дані маршруту завантажено — route data loaded'
+            : p.play ? 'статус · активний — status active' : 'утримання — hold')
+        this.guidance.update(dt)
     }
 
     _loop() {

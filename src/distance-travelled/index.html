@@ -8,15 +8,18 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=PT+Mono&display=swap">
     <style>
-        /* ── 1000 tokens · night ─────────────────────────────────────────── */
+        /* ── Tokens · guidance (black / white) by default; the GUI can switch
+              to the 1000 night palette, which rewrites these three ──────── */
         :root {
-            --ground    : #141414;
-            --text      : #f3e2b6;
-            --muted     : #a8a092;
+            --ground    : #000000;
+            --text      : #ffffff;
+            --muted     : #8f8f8f;
             --ua-blue   : #0057b7;
             --ua-yellow : #ffd700;
-            --rule      : rgba(243, 226, 182, 0.55);
-            --rule-thin : rgba(243, 226, 182, 0.22);
+            --rule      : color-mix(in srgb, var(--text) 55%, transparent);
+            --rule-thin : color-mix(in srgb, var(--text) 22%, transparent);
+            --veil      : color-mix(in srgb, var(--ground) 84%, transparent);
+            --gutter    : 16px;
             --mono      : 'JetBrains Mono', ui-monospace, monospace;
             --type      : 'PT Mono', 'Courier New', monospace;
         }
@@ -32,84 +35,112 @@
             font-family: var(--mono);
         }
 
-        canvas.webgl {
+        /* backdrop (guidance fan, columns, marks) → WebGL → CSS3D type → overlays */
+        canvas.backdrop, canvas.webgl, .css3d {
             position: fixed;
             inset: 0;
             display: block;
-            touch-action: none;
+            width: 100%;
+            height: 100%;
         }
+        canvas.backdrop, .css3d { pointer-events: none; }
+        canvas.webgl { touch-action: none; }
 
-        .css3d {
+        /* ── Grain · a noise tile stepped about, over everything but the GUI ─ */
+        .grain {
             position: fixed;
-            inset: 0;
+            inset: -50%;
+            z-index: 1000;
             pointer-events: none;
+            background-size: 256px 256px;
+            opacity: 0.14;
+            animation: grain 0.9s steps(9) infinite;
         }
+        @keyframes grain {
+            0%   { transform: translate(0, 0); }
+            20%  { transform: translate(-7%, 4%); }
+            40%  { transform: translate(5%, -9%); }
+            60%  { transform: translate(-3%, 11%); }
+            80%  { transform: translate(9%, 2%); }
+            100% { transform: translate(-6%, -5%); }
+        }
+        @media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
 
         /* ── Title ───────────────────────────────────────────────────────── */
         .dt-title {
             position: fixed;
-            left: 16px;
-            top: 14px;
+            left: var(--gutter);
+            top: 26px;
             max-width: calc(100vw - 380px);
             pointer-events: none;
         }
-        .dt-title .run { font: 400 11px/14px var(--mono); letter-spacing: 0.12em; color: var(--muted); }
+        .dt-title .run { font: 500 10px/14px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
         .dt-title h1   { font: 700 30px/1.05 var(--mono); letter-spacing: -0.02em; margin: 6px 0 6px; }
         .dt-title .sub { font: 400 11px/15px var(--mono); color: var(--muted); }
 
-        /* ── HUD · title block ───────────────────────────────────────────── */
+        /* ── Bottom component · readout ──────────────────────────────────────
+           Pinned to the viewport width less a gutter each side, so it never
+           sizes to its content; text that runs long wraps and the component
+           grows upward instead. */
         .hud {
             position: fixed;
-            left: 16px;
-            bottom: 16px;
+            left: var(--gutter);
+            right: var(--gutter);
+            bottom: var(--gutter);
+            width: calc(100vw - 2 * var(--gutter));
             display: grid;
-            grid-template-columns: repeat(6, auto);
-            max-width: calc(100vw - 32px);
-            border: 1px solid var(--rule);
-            background: rgba(20, 20, 20, 0.86);
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            column-gap: 20px;
+            border-top: 1px solid var(--rule);
+            background: var(--veil);
             pointer-events: none;
         }
         .hud .cell {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 3px;
             min-width: 0;
-            padding: 8px 14px 9px;
-            border-left: 1px solid var(--rule-thin);
+            padding: 10px 0 10px;
         }
-        .hud .cell:first-child { border-left: 0; }
-        .hud .lab  { font: 400 10px/13px var(--mono); letter-spacing: 0.1em; color: var(--muted); white-space: nowrap; }
-        .hud .val  { font: 700 19px/26px var(--mono); letter-spacing: -0.01em; white-space: nowrap; }
-        .hud .val--sm { font-size: 14px; }
+        .hud .lab  { font: 500 10px/13px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+        .hud .val  { font: 700 19px/24px var(--mono); letter-spacing: -0.01em; }
+        .hud .val--sm { font-size: 14px; line-height: 20px; }
         .hud .unit { font: 400 13px var(--mono); color: var(--muted); }
-        .hud .sub  { font: 400 11px/15px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .hud .note {
+        .hud .sub  { font: 400 11px/15px var(--mono); color: var(--muted); }
+        .hud .lab, .hud .val, .hud .sub { overflow-wrap: anywhere; }
+        .hud .strip {
             grid-column: 1 / -1;
-            padding: 5px 14px 6px;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 6px 28px;
+            padding: 7px 0 2px;
             border-top: 1px solid var(--rule-thin);
-            font: 400 10.5px/14px var(--mono);
+            font: 500 10px/14px var(--mono);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
             color: var(--muted);
         }
+        .hud .strip .code   { color: var(--text); white-space: pre-wrap; }
+        .hud .strip .status { color: var(--text); text-align: right; }
 
-        /* keep the GUI clear of the HUD */
-        .lil-gui.root.autoPlace { max-height: calc(100% - 150px); }
+        /* keep the GUI clear of the bottom component, however tall it grows */
+        .lil-gui.root.autoPlace { max-height: calc(100% - var(--hud-h, 120px) - 2 * var(--gutter)); }
 
         @media (max-width: 1180px) {
-            .hud { grid-template-columns: repeat(3, auto); }
-            .hud .cell--x { display: none; }
+            .hud { grid-template-columns: repeat(3, minmax(0, 1fr)); }
         }
         @media (max-width: 760px) {
-            .dt-title { top: 40px; max-width: calc(100vw - 32px); }
+            :root { --gutter: 8px; }
+            .dt-title { top: 44px; max-width: calc(100vw - 2 * var(--gutter)); }
             .dt-title h1 { font-size: 20px; }
             .dt-title .sub { display: none; }
-            .hud { left: 8px; right: 8px; bottom: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .hud .cell { padding: 6px 8px; }
+            .hud { column-gap: 10px; }
+            .hud .cell--x, .hud .sub { display: none; }
             .hud .val { font-size: 15px; line-height: 20px; }
-            .hud .val--sm { font-size: 12px; white-space: normal; }
-            .hud .lab { white-space: normal; }
-            .hud .sub { display: none; }
-            .hud .note { font-size: 10px; line-height: 13px; padding: 5px 8px; }
-            .hud .note .desk { display: none; }
+            .hud .val--sm { font-size: 12px; line-height: 16px; }
+            .hud .strip { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+            .hud .strip .status { order: -1; text-align: left; }
+            .hud .strip .code, .hud .strip .desk { display: none; }
         }
 
         /* ── 3D labels · sized in CSS px, scaled into the planes ─────────── */
@@ -151,7 +182,7 @@
         .key {
             width: 1300px;
             padding: 64px 72px 72px;
-            background: rgba(20, 20, 20, 0.9);
+            background: var(--veil);
             border: 1px solid var(--rule);
             color: var(--muted);
             font: 400 20px/1.45 var(--mono);
@@ -194,6 +225,7 @@
     </style>
 </head>
 <body>
+    <canvas class="backdrop" aria-hidden="true"></canvas>
     <canvas class="webgl" aria-label="Animated route sheet: Bristol to Kyiv, 2 592 km over five days, drawn against distance, time or space"></canvas>
     <div class="css3d"></div>
 
@@ -234,8 +266,13 @@
             <span class="val" data-r="cross"></span>
             <span class="sub" data-r="crossSub"></span>
         </div>
-        <p class="note">Times are not yet logged: on the time axis each day is an equal column and the pace within a day is assumed even.<span class="desk"> Space bar plays and pauses.</span></p>
+        <div class="strip">
+            <span class="code" data-r="code"></span>
+            <span class="note">Times are not yet logged: on the time axis each day is an equal column and the pace within a day is assumed even.<span class="desk"> Space bar plays and pauses.</span></span>
+            <span class="status" data-r="status"></span>
+        </div>
     </section>
+    <div class="grain" aria-hidden="true"></div>
 
     <script type="module" src="./script.js"></script>
 </body>
