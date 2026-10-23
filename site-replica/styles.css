@@ -35,18 +35,55 @@
   --font-title:   "MFred", var(--font-display);   /* titles only, always set in capitals */
   --font-mono:    "JetBrains Mono", ui-monospace, monospace;
   --font-sans:  system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  --fs-body:   clamp(1rem,   0.95rem + 0.2vw, 1.125rem);
-  --fs-link:   clamp(0.95rem, 0.9rem + 0.2vw, 1.125rem);
-  --fs-enter:  0.875rem;   /* 14px: small but legible; scales with the reader's text size */
-  --fs-title:  clamp(0.95rem, 0.9rem + 0.2vw, 1.2rem);
+  /* Type scale. Fixed steps per breakpoint (phone values further down),
+     in rem so they follow the reader's text size. Every line height is the
+     size plus 0.5rem (8px); tracking tightens as type grows and opens for
+     text. Interface text (nav, captions, controls, labels) is Small. */
+  --t-jumbo: 8rem;       /* 128 · тисяча on the loading screen */
+  --t-h1:    4rem;       /* 64  · the Info title */
+  --t-h4:    2.5rem;     /* 40  · the contact-sheet title */
+  --t-h5:    2rem;       /* 32  · DISTANCE TRAVELLED under the wordmark */
+  --t-h6:    1.5rem;     /* 24  · тисяча in the nav */
+  --t-lead:  1.25rem;    /* 20  · the Info introduction */
+  --t-body:  1rem;       /* 16  · paragraphs */
+  --t-small: 0.75rem;    /* 12  · interface text; nothing smaller is used */
+  --lead:    0.5rem;     /* added to each size for its line height */
+  --track-display: -0.02em;
+  --track-heading: -0.01em;
+  --track-lead:     0.005em;
+  --track-body:     0.01em;
+  --track-small:    0.02em;
+  /* Earlier names, now on the scale */
+  --fs-body:  var(--t-body);
+  --fs-link:  var(--t-small);
+  --fs-enter: var(--t-small);
+  --fs-title: var(--t-small);
 
-  /* Spacing scale */
-  --sp-1: 0.25em;
-  --sp-2: 0.5em;
-  --sp-3: 1em;
-  --sp-4: 1.5em;
-  --sp-5: 2em;
-  --sp-6: 3em;
+  /* Spacing: a 4px grid, in rem. The gap after a heading grows with the
+     heading: label to title, small heading to text, section heading to
+     text, display heading to text. */
+  --space-1:  0.25rem;   /* 4  */
+  --space-2:  0.5rem;    /* 8  */
+  --space-3:  0.75rem;   /* 12 */
+  --space-4:  1rem;      /* 16 */
+  --space-5:  1.25rem;   /* 20 */
+  --space-6:  1.5rem;    /* 24 */
+  --space-7:  2rem;      /* 32 */
+  --space-8:  2.5rem;    /* 40 */
+  --space-9:  3rem;      /* 48 */
+  --space-10: 4rem;      /* 64 */
+  --space-11: 6rem;      /* 96 */
+  --gap-tag:     var(--space-5);    /* 20 · label → title */
+  --gap-card:    var(--space-8);    /* 40 · small heading → text */
+  --gap-section: var(--space-10);   /* 64 · section heading → text */
+  --gap-hero:    var(--space-11);   /* 96 · display heading → text */
+  /* Earlier names, now on the grid */
+  --sp-1: var(--space-1);
+  --sp-2: var(--space-2);
+  --sp-3: var(--space-4);
+  --sp-4: var(--space-6);
+  --sp-5: var(--space-7);
+  --sp-6: var(--space-9);
 
   /* Radii & container (page chrome is square, as on a drawing sheet) */
   --radius-sm: 1px;
@@ -57,6 +94,21 @@
   /* Motion */
   --t-fast: 0.3s ease-in-out;
   --t-med:  0.4s ease;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --t-jumbo: 4.5rem;    /* 72 */
+    --t-h1:    2.25rem;   /* 36 */
+    --t-h4:    1.5rem;    /* 24 */
+    --t-h5:    1.25rem;   /* 20 */
+    --t-h6:    1.125rem;  /* 18 */
+    --t-lead:  1.125rem;  /* 18 */
+    --gap-tag:     var(--space-4);   /* 16 */
+    --gap-card:    var(--space-6);   /* 24 */
+    --gap-section: var(--space-8);   /* 40 */
+    --gap-hero:    var(--space-9);   /* 48 */
+  }
 }
 
 /* ─── Reset ─── */
@@ -82,7 +134,8 @@ body.site {
   color: var(--text);
   font-family: var(--font-mono);
   font-size: var(--fs-body);
-  line-height: 1.3;
+  line-height: calc(var(--t-body) + var(--lead));
+  letter-spacing: var(--track-body);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -117,25 +170,27 @@ body.site {
 .wordmark {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(4rem, 2.4rem + 9vw, 10rem);
-  line-height: 0.92;
+  font-size: var(--t-jumbo);
+  line-height: calc(var(--t-jumbo) + var(--lead));
   font-weight: 100;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--track-display);
 }
 /* The title, "distance travelled", in MFred Heavy. */
 .wordmark-sub {
-  margin: var(--sp-3) 0 0;
+  margin: var(--gap-tag) 0 0;
   font-family: var(--font-title);
-  font-size: clamp(1.4rem, 1rem + 1.6vw, 2.6rem);
+  font-size: var(--t-h5);
   font-weight: 900;
-  line-height: 1;
+  line-height: calc(var(--t-h5) + var(--lead));
+  letter-spacing: var(--track-heading);
   text-transform: uppercase;
 }
 .wordmark-meta {
   margin: var(--sp-3) 0 0;
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
+  font-size: var(--t-small);
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
   color: var(--muted);
 }
 .enter-button {
@@ -146,7 +201,8 @@ body.site {
 .enter-text {
   font-family: var(--font-mono);
   font-size: var(--fs-enter);
-  letter-spacing: 0.08em;
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
   color: var(--text);
 }
 /* Underline, not fade: a faded label would drop below AA contrast. */
@@ -222,8 +278,9 @@ body.site {
 .project-title-copy {
   font-family: var(--font-mono);
   font-size: var(--fs-title);
+  line-height: calc(var(--t-small) + var(--lead));
   color: var(--text);
-  letter-spacing: 0.02em;
+  letter-spacing: var(--track-small);
   background: rgba(255,255,255,0.6);
   padding: var(--sp-1) var(--sp-3);
   border-radius: var(--radius-sm);
@@ -237,12 +294,12 @@ body.site {
   color: var(--text);
   transition: color var(--t-med);
 }
-.g-step { font-size: 1.1rem; }
+.g-step { font-size: var(--t-body); }
 .g-all {
   margin-left: var(--sp-2);
   padding: 0 var(--sp-2);
-  font-size: 0.875rem;
-  letter-spacing: 0.04em;
+  font-size: var(--t-small);
+  letter-spacing: var(--track-small);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.3em;
@@ -278,27 +335,29 @@ body.site {
   justify-content: space-between;
   align-items: baseline;
   gap: var(--sp-3);
-  padding-bottom: var(--sp-2);
-  margin-bottom: var(--sp-4);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--gap-card);
   border-bottom: 1px solid var(--border);
 }
 .all-head h2 {
   margin: 0;
   font-family: var(--font-title);
   font-weight: 900;
-  font-size: clamp(1.4rem, 1rem + 1.5vw, 2.4rem);
-  line-height: 1;
+  font-size: var(--t-h4);
+  line-height: calc(var(--t-h4) + var(--lead));
+  letter-spacing: var(--track-display);
   text-transform: uppercase;
 }
 .all-head h2:focus { outline: none; }
-.all-count { font-family: var(--font-mono); font-weight: 400; font-size: 0.5em; color: var(--muted); }
+.all-count { font-family: var(--font-mono); font-weight: 400; font-size: var(--t-small); letter-spacing: var(--track-small); color: var(--muted); }
 .all-close {
   min-height: 44px;
   padding: 0 var(--sp-3);
   border: 1px solid var(--text);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: var(--t-small);
+  letter-spacing: var(--track-small);
 }
 .all-grid {
   list-style: none;
@@ -327,8 +386,8 @@ body.site {
   display: block;
   margin-top: var(--sp-1);
   font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
+  font-size: var(--t-small);
+  letter-spacing: var(--track-small);
   color: var(--muted);
 }
 .all-thumb[aria-current="true"] .all-num { color: var(--text); }
@@ -355,9 +414,10 @@ body.site {
 }
 .nav-wordmark {
   font-family: var(--font-display);
-  font-size: clamp(1.4rem, 1rem + 0.8vw, 2rem);
+  font-size: var(--t-h6);
   font-weight: 100;
-  line-height: 1;
+  line-height: calc(var(--t-h6) + var(--lead));
+  letter-spacing: var(--track-heading);
 }
 .nav-menu {
   display: flex;
@@ -369,6 +429,8 @@ body.site {
 .nav-link {
   font-family: var(--font-mono);
   font-size: var(--fs-link);
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
   color: var(--text);
   padding: var(--sp-1) var(--sp-2);
   transition: color var(--t-med);
@@ -411,30 +473,39 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
 }
 .info-panel h2 {
   font-family: var(--font-title);
-  font-size: clamp(2rem, 1.4rem + 3vw, 4rem);
+  font-size: var(--t-h1);
   font-weight: 900;
-  line-height: 0.95;
+  line-height: calc(var(--t-h1) + var(--lead));
+  letter-spacing: var(--track-display);
   text-transform: uppercase;
-  margin: 0 0 var(--sp-4);
+  margin: 0 0 var(--gap-hero);
 }
 .info-panel h2:focus { outline: none; }
 .info-panel h3 {
-  font-size: 0.85rem;
-  letter-spacing: 0.14em;
-  margin: var(--sp-6) 0 var(--sp-3);
-  padding-top: var(--sp-3);
+  font-size: var(--t-small);
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
+  margin: var(--gap-section) 0 var(--gap-tag);
+  padding-top: var(--space-4);
   border-top: 1px solid var(--border);
 }
-.info-panel p  { max-width: 42rem; margin: 0 0 var(--sp-3); line-height: 1.55; }
-.info-kicker {
-  font-size: 0.8rem;
-  letter-spacing: 0.12em;
+.info-panel p  { max-width: 42rem; margin: 0 0 var(--space-4); }
+.info-panel .info-lead {
+  font-size: var(--t-lead);
+  line-height: calc(var(--t-lead) + var(--lead));
+  letter-spacing: var(--track-lead);
+}
+.info-panel .info-kicker {
+  margin-bottom: var(--gap-tag);
+  font-size: var(--t-small);
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
   color: var(--muted);
 }
 .info-facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  margin: var(--sp-5) 0 0;
+  margin: var(--gap-card) 0 0;
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
 }
@@ -444,22 +515,24 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   border-bottom: 1px solid var(--border);
 }
 .info-facts dt {
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
+  font-size: var(--t-small);
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
   color: var(--muted);
 }
-.info-facts dd { margin: var(--sp-1) 0 0; font-size: 0.95rem; }
-.info-spread { margin: 0 0 var(--sp-5); }
+.info-facts dd { margin: var(--space-1) 0 0; font-size: var(--t-body); }
+.info-spread { margin: 0 0 var(--gap-card); }
 .info-spread img { width: 100%; height: auto; background: #f4f4f4; }
 .info-spread figcaption {
-  margin-top: var(--sp-2);
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
+  margin-top: var(--space-2);
+  font-size: var(--t-small);
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
   color: var(--muted);
 }
 /* Artefacts: the two sheets side by side at equal height (their widths
    are 2700 and 1170 pt on the same 1938 pt height), then the loop. */
-.info-artefact { margin: 0 0 var(--sp-5); }
+.info-artefact { margin: 0 0 var(--gap-card); }
 .info-sheets {
   display: grid;
   grid-template-columns: 2700fr 1170fr;
@@ -475,9 +548,10 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   background: #000;
 }
 .info-artefact figcaption {
-  margin-top: var(--sp-2);
-  font-size: 0.8rem;
-  letter-spacing: 0.06em;
+  margin-top: var(--space-2);
+  font-size: var(--t-small);
+  line-height: calc(var(--t-small) + var(--lead));
+  letter-spacing: var(--track-small);
   color: var(--muted);
 }
 .info-artefact figcaption a {
@@ -495,11 +569,14 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
 }
 
 .info-close {
-  margin-top: var(--sp-4);
+  margin-top: var(--gap-card);
   min-height: 44px;
   padding: var(--sp-2) var(--sp-4);
   border: 1px solid var(--text);
   border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--t-small);
+  letter-spacing: var(--track-small);
 }
 
 /* ─── Mobile tweaks ─── */
@@ -516,7 +593,6 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
 }
 @media (max-width: 479px) {
   .navbar { padding: var(--sp-2) var(--sp-3); }
-  .nav-link { font-size: 1rem; }
 }
 
 /* Prevent horizontal scroll at 320px */
