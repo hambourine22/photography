@@ -368,7 +368,7 @@ body:has(.info-panel:not([hidden])) .navbar {
 .info-artefact--sheet img { display: block; width: min(100%, 48rem); height: auto; background: #f4f4f4; }
 .info-artefact--video video {
   display: block;
-  width: min(100%, 28rem);
+  width: 100%;   /* full width of the Info column */
   height: auto;
   aspect-ratio: 4 / 5;
   background: #000;
