@@ -27,12 +27,12 @@
   </header>
 
   <!-- ─── Gallery (click to advance) ─── -->
-  <main id="gallery" class="gallery" tabindex="-1" aria-label="Photograph gallery, click or press the arrow keys to advance">
-    <figure class="image-container center-image active">
+  <main id="gallery" class="gallery" tabindex="-1" aria-label="Photographs, one at a time: click, swipe or use the arrow keys to move through them">
+    <figure class="image-container" data-pos="current">
       <img alt="Open sea at dusk under low cloud, a distant ship on the horizon"
            src="images/main/dt1000-sea-01.jpg" width="2000" height="1346" decoding="async">
     </figure>
-    <figure class="image-container right-image active">
+    <figure class="image-container">
       <img alt="The sea through a ship’s window at dusk, lights inside reflected as pale ovals across the clouds, a band of light along the horizon"
            src="images/main/dt1000-sea-02.jpg" width="2000" height="1346" decoding="async">
     </figure>
@@ -76,14 +76,19 @@
       <img alt="A white flatbed van doubled by motion in front of a stepped, slatted noise barrier with yellow warning signs"
            src="images/main/dt1000-van-01.jpg" width="2000" height="1346" decoding="async">
     </figure>
-    <figure class="image-container left-image active">
+    <figure class="image-container">
       <img alt="A slatted noise barrier marked with painted graffiti, seen across the carriageway and a blurred verge"
            src="images/main/dt1000-L1061892.jpg" width="2000" height="1346" decoding="async">
     </figure>
 
-    <figcaption class="project-title" id="project-title" aria-live="polite">
-      <span class="project-title-copy"><span lang="uk">тисяча</span> — distance travelled<span class="project-count" id="project-count"> — 01 / 13</span></span>
-    </figcaption>
+    <div class="gallery-bar">
+      <button type="button" class="g-step" data-step="-1" aria-label="Previous photograph">←</button>
+      <p class="project-title" id="project-title" aria-live="polite">
+        <span class="project-title-copy"><span class="project-name"><span lang="uk">тисяча</span> — distance travelled — </span><span class="project-count" id="project-count">01 / 13</span></span>
+      </p>
+      <button type="button" class="g-step" data-step="1" aria-label="Next photograph">→</button>
+      <button type="button" class="g-all" id="view-all" aria-controls="all-frames" aria-expanded="false">view all</button>
+    </div>
   </main>
 
   <!-- ─── Navigation ─── -->
@@ -96,6 +101,17 @@
       <li><a href="#info" class="nav-link">Info</a></li>
     </ul>
   </nav>
+
+  <!-- ─── All frames, as a contact sheet (for "view all") ─── -->
+  <section id="all-frames" class="all-panel" aria-labelledby="all-heading" hidden>
+    <div class="all-inner">
+      <header class="all-head">
+        <h2 id="all-heading" tabindex="-1">all frames <span class="all-count" id="all-count"></span></h2>
+        <button type="button" class="all-close">close</button>
+      </header>
+      <ol class="all-grid" id="all-grid"></ol>
+    </div>
+  </section>
 
   <!-- ─── Hidden-until-opened info panel (for the Info link) ─── -->
   <section id="info" class="info-panel" aria-labelledby="info-heading" hidden>
@@ -192,6 +208,9 @@
       const infoLink = document.querySelector('a.nav-link[href="#info"]');
       const homeLinks = document.querySelectorAll('a[href="#gallery"]');
       let frames = [...gallery.querySelectorAll('.image-container')];
+      const allPanel = document.getElementById('all-frames');
+      const allGrid = document.getElementById('all-grid');
+      const viewAll = document.getElementById('view-all');
       const pad = n => String(n).padStart(2, '0');
 
       // Dismiss the loading overlay.
@@ -205,24 +224,24 @@
         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); dismiss(); }
       });
 
-      // The current frame sits in the centre slot, its neighbours left and
-      // right; every other frame waits hidden until it comes round.
+      // One frame at a time. The rest wait to its right ("after") or left
+      // ("before") by the shorter way round, so the next frame wipes in from
+      // the side it is travelling from; styles.css draws the wipe.
       let index = 0;
       const show = i => {
-        index = (i + frames.length) % frames.length;
+        const n = frames.length;
+        index = n ? (i + n) % n : 0;
         frames.forEach((el, j) => {
-          const offset = (j - index + frames.length) % frames.length;
-          const slot = offset === 0 ? 'center'
-                     : offset === 1 ? 'right'
-                     : offset === frames.length - 1 ? 'left' : '';
-          el.className = slot ? `image-container ${slot}-image active` : 'image-container';
-          el.dataset.slotCurrent = slot;
+          const d = (j - index + n) % n;
+          el.dataset.pos = d === 0 ? 'current' : d <= n / 2 ? 'after' : 'before';
+          el.setAttribute('aria-hidden', String(d !== 0));
         });
+        allGrid.querySelectorAll('.all-thumb').forEach((b, j) => b.setAttribute('aria-current', String(j === index)));
         // Looked up each time: the editor can rewrite the caption's markup.
         const counter = document.getElementById('project-count');
         if (counter) {
           counter.hidden = !frames.length;
-          counter.textContent = ` — ${pad(index + 1)} / ${pad(frames.length)}`;
+          counter.textContent = `${pad(index + 1)} / ${pad(frames.length)}`;
         }
       };
       show(0);
@@ -252,12 +271,26 @@
         else img.addEventListener('error', drop, { once: true });
       });
 
-      // Click anywhere on the gallery to advance.
+      // Click anywhere on the gallery to advance, or swipe either way.
+      let swipeX = null, swiped = false;
+      gallery.addEventListener('pointerdown', e => {
+        if (e.pointerType !== 'mouse') swipeX = e.clientX;
+      });
+      gallery.addEventListener('pointerup', e => {
+        if (swipeX === null) return;
+        const dx = e.clientX - swipeX;
+        swipeX = null;
+        if (Math.abs(dx) > 40) { swiped = true; show(index + (dx < 0 ? 1 : -1)); }
+      });
       gallery.addEventListener('click', e => {
-        // Ignore clicks on editor UI (which has its own container).
-        if (e.target.closest('.editor-root')) return;
+        // Ignore the bar's own controls and the editor UI.
+        if (e.target.closest('.gallery-bar, .editor-root')) return;
+        if (swiped) { swiped = false; return; }
         show(index + 1);
       });
+      gallery.querySelectorAll('.g-step').forEach(b => b.addEventListener('click', () => {
+        show(index + Number(b.dataset.step));
+      }));
       gallery.addEventListener('keydown', e => {
         if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); show(index + 1); }
         if (e.key === 'ArrowLeft') { e.preventDefault(); show(index - 1); }
@@ -273,6 +306,8 @@
       };
       const openInfo = e => {
         e.preventDefault();
+        allPanel.hidden = true;
+        viewAll.setAttribute('aria-expanded', 'false');
         infoPanel.hidden = false;
         infoPanel.scrollTop = 0;
         document.getElementById('info-heading').focus({ preventScroll: true });
@@ -292,10 +327,57 @@
         }
       });
 
+      // "view all": every frame as a contact sheet; choosing one closes the
+      // sheet and brings that frame round. Built on opening, so it always
+      // matches the frames that actually loaded.
+      const closeAll = () => {
+        allPanel.hidden = true;
+        viewAll.setAttribute('aria-expanded', 'false');
+      };
+      const openAll = () => {
+        closeInfo();
+        allGrid.innerHTML = '';
+        frames.forEach((fig, j) => {
+          const img = fig.querySelector('img');
+          const li = document.createElement('li');
+          li.style.setProperty('--i', j);
+          li.innerHTML = `<button type="button" class="all-thumb" aria-current="${j === index}">
+              <img src="${img.getAttribute('src').replace('images/main/', 'images/main/thumbs/')}" alt="" width="800" height="538" loading="lazy" decoding="async">
+              <span class="all-num">${pad(j + 1)}</span>
+              <span class="visually-hidden">: ${img.alt}</span>
+            </button>`;
+          const thumb = li.querySelector('img');
+          thumb.addEventListener('error', () => { thumb.src = img.getAttribute('src'); }, { once: true });
+          li.querySelector('button').addEventListener('click', () => {
+            closeAll();
+            show(j);
+            gallery.focus({ preventScroll: true });
+          });
+          allGrid.appendChild(li);
+        });
+        document.getElementById('all-count').textContent = `· ${pad(frames.length)}`;
+        allPanel.hidden = false;
+        allPanel.scrollTop = 0;
+        viewAll.setAttribute('aria-expanded', 'true');
+        document.getElementById('all-heading').focus({ preventScroll: true });
+      };
+      viewAll.addEventListener('click', openAll);
+      allPanel.querySelector('.all-close').addEventListener('click', () => {
+        closeAll();
+        viewAll.focus();
+      });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !allPanel.hidden) {
+          closeAll();
+          viewAll.focus();
+        }
+      });
+
       // The wordmark returns to the gallery; Anatomy is its own page.
       homeLinks.forEach(a => a.addEventListener('click', e => {
         e.preventDefault();
         closeInfo();
+        closeAll();
         gallery.focus({ preventScroll: true });
       }));
     })();

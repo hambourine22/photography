@@ -157,72 +157,68 @@ body.site {
   text-underline-offset: 0.3em;
 }
 
-/* ─── Gallery ─── */
+/* ─── Gallery: one frame at a time ─── */
 .gallery {
   position: fixed;
   inset: 0;
   overflow: hidden;
   cursor: pointer;
   background: #ffffff;
-  touch-action: manipulation;
+  touch-action: pan-y;           /* horizontal swipes go to the carousel */
+  --wipe: 1.1s;
+  --wipe-ease: cubic-bezier(0.77, 0, 0.175, 1);
 }
+/* Each frame waits clipped to nothing, just to the right ("after") or left
+   ("before") of centre. The current frame wipes open from the side it comes
+   from and settles; the frame it replaces is pushed the other way and
+   clipped in step, so it shows only where the new frame hasn't reached. */
 .image-container {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  opacity: 0;
-  transition: transform var(--t-fast), opacity var(--t-fast);
   /* The frames are 35 mm landscape (2000 × 1346). */
-  width: min(90vw, calc(66vh * 1000 / 673));
+  width: min(92vw, calc(68vh * 1000 / 673));
   aspect-ratio: 1000 / 673;
+  margin: 0;
+  transform: translate(-50%, -50%) translateX(3%);
+  clip-path: inset(0 0 0 100%);
+  transition:
+    clip-path var(--wipe) var(--wipe-ease),
+    transform var(--wipe) var(--wipe-ease);
   pointer-events: none;
   z-index: 1;
 }
-.center-image { z-index: 3; }
-.left-image, .right-image { z-index: 2; }
+.image-container[data-pos="before"] {
+  transform: translate(-50%, -50%) translateX(-3%);
+  clip-path: inset(0 100% 0 0);
+}
+.image-container[data-pos="current"] {
+  transform: translate(-50%, -50%);
+  clip-path: inset(0);
+  z-index: 3;
+}
 .image-container img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
 }
-.image-container.active { opacity: 1; }
 
-/* Desktop multi-slot positioning (≥ 992px) */
-@media (min-width: 992px) {
-  .image-container {
-    width: 31vw;
-  }
-  .center-image {
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .left-image {
-    left: 2vw;
-    transform: translateY(-50%);
-  }
-  .right-image {
-    left: auto;
-    right: 2vw;
-    transform: translateY(-50%);
-  }
-}
-
-/* Gallery caption */
-.project-title {
+/* Bar under the frame: step back, caption and count, step on, view all. */
+.gallery-bar {
   position: absolute;
-  bottom: calc(var(--sp-6) + var(--sp-4));
+  bottom: calc(var(--sp-6) + var(--sp-3));
   left: 50%;
   transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
   width: max-content;
-  max-width: calc(100vw - 2em);
-  text-align: center;
-  padding: 0 var(--sp-3);
-  margin: 0;
+  max-width: calc(100vw - 1em);
   z-index: 4;
-  pointer-events: none;
+  cursor: default;
 }
+.project-title { margin: 0; text-align: center; }
 .project-title-copy {
   font-family: var(--font-mono);
   font-size: var(--fs-title);
@@ -233,6 +229,111 @@ body.site {
   border-radius: var(--radius-sm);
 }
 .project-count { font-variant-numeric: tabular-nums; color: var(--muted); }
+.g-step,
+.g-all {
+  min-width: 44px;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  color: var(--text);
+  transition: color var(--t-med);
+}
+.g-step { font-size: 1.1rem; }
+.g-all {
+  margin-left: var(--sp-2);
+  padding: 0 var(--sp-2);
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
+.g-step:hover,
+.g-all:hover { color: var(--accent); }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── All frames: the contact sheet behind "view all" ─── */
+.all-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 997;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--sp-5) var(--sp-4) calc(var(--sp-6) * 2);
+  background: #ffffff;
+  animation: all-in 0.45s ease both;
+}
+.all-panel[hidden] { display: none; }
+.all-inner { max-width: 1400px; margin: 0 auto; }
+.all-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding-bottom: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  border-bottom: 1px solid var(--border);
+}
+.all-head h2 {
+  margin: 0;
+  font-family: var(--font-title);
+  font-weight: 900;
+  font-size: clamp(1.4rem, 1rem + 1.5vw, 2.4rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+.all-head h2:focus { outline: none; }
+.all-count { font-family: var(--font-mono); font-weight: 400; font-size: 0.5em; color: var(--muted); }
+.all-close {
+  min-height: 44px;
+  padding: 0 var(--sp-3);
+  border: 1px solid var(--text);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+}
+.all-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: var(--sp-4) var(--sp-3);
+}
+.all-grid li { animation: thumb-in 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: calc(var(--i, 0) * 40ms); }
+.all-thumb { display: block; width: 100%; text-align: left; cursor: pointer; }
+.all-thumb img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1000 / 673;
+  object-fit: cover;
+  background: #f4f4f4;
+  outline: 1px solid transparent;
+  outline-offset: 3px;
+  transition: opacity var(--t-med), outline-color var(--t-med);
+}
+.all-thumb:hover img { opacity: 0.82; }
+.all-thumb[aria-current="true"] img { outline-color: var(--text); }
+.all-num {
+  display: block;
+  margin-top: var(--sp-1);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.all-thumb[aria-current="true"] .all-num { color: var(--text); }
+@keyframes all-in { from { opacity: 0; } }
+@keyframes thumb-in { from { opacity: 0; transform: translateY(12px); } }
 
 /* ─── Navbar ─── */
 .navbar {
@@ -277,7 +378,7 @@ body.site {
 .nav-link[aria-current="page"] { color: var(--accent); }
 
 /* Over the scrolling info page the nav needs its own ground. */
-body:has(.info-panel:not([hidden])) .navbar {
+body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   background: var(--surface);
   border-top: 1px solid var(--border);
 }
@@ -406,7 +507,7 @@ body:has(.info-panel:not([hidden])) .navbar {
 }
 @media (max-width: 767px) {
   .image-container { width: 92vw; }
-  .project-title { bottom: calc(var(--sp-6) + var(--sp-3)); }
+  .project-name { display: none; }   /* the count, steps and view all fit on a phone */
 }
 @media (max-width: 479px) {
   .navbar { padding: var(--sp-2) var(--sp-3); }
