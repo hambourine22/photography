@@ -5,3 +5,6 @@ reference/
 # Full-size originals of the photographs; the site serves resized copies.
 images/_originals/
 .DS_Store
+
+# Recht is a Fontspring demo (personal use only): local, never committed or served.
+fonts/recht/
