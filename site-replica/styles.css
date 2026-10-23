@@ -37,7 +37,7 @@
   --font-sans:  system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   --fs-body:   clamp(1rem,   0.95rem + 0.2vw, 1.125rem);
   --fs-link:   clamp(0.95rem, 0.9rem + 0.2vw, 1.125rem);
-  --fs-enter:  clamp(1.4rem, 1.1rem + 1.4vw, 1.9rem);
+  --fs-enter:  0.875rem;   /* 14px: small but legible; scales with the reader's text size */
   --fs-title:  clamp(0.95rem, 0.9rem + 0.2vw, 1.2rem);
 
   /* Spacing scale */
@@ -148,10 +148,14 @@ body.site {
   font-size: var(--fs-enter);
   letter-spacing: 0.08em;
   color: var(--text);
-  transition: opacity var(--t-med);
 }
+/* Underline, not fade: a faded label would drop below AA contrast. */
 .enter-button:hover .enter-text,
-.enter-button:focus-visible .enter-text { opacity: 0.6; }
+.enter-button:focus-visible .enter-text {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.3em;
+}
 
 /* ─── Gallery ─── */
 .gallery {
@@ -406,7 +410,6 @@ body:has(.info-panel:not([hidden])) .navbar {
 @media (max-width: 479px) {
   .navbar { padding: var(--sp-2) var(--sp-3); }
   .nav-link { font-size: 1rem; }
-  .enter-text { font-size: clamp(1.2rem, 5vw, 1.6rem); }
 }
 
 /* Prevent horizontal scroll at 320px */
