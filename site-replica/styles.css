@@ -31,7 +31,7 @@
   --muted:     #4d4843;   /* graphite · captions, metadata */
 
   /* Typography (1000) */
-  --font-display: "Roboto Condensed", "Arial Narrow", sans-serif;
+  --font-display: "IBM Plex Mono", ui-monospace, monospace;   /* тисяча wordmark; for now, until a licensed Cyrillic display face */
   --font-title:   "MFred", var(--font-display);   /* titles only, always set in capitals */
   --font-mono:    "JetBrains Mono", ui-monospace, monospace;
   --font-sans:  system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
