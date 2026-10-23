@@ -192,6 +192,29 @@
                aria-label="Time as shape: a strip of motorway, barrier and sky folded into an isometric corner, moving as the road passes"></video>
         <figcaption>time as shape · 8 s loop</figcaption>
       </figure>
+      <figure class="info-artefact info-artefact--reels">
+        <div class="info-reels">
+          <figure class="reel">
+            <video src="images/info/ig-underground.mp4" poster="images/info/ig-underground-poster.jpg"
+                   width="1080" height="1350" muted loop playsinline preload="none"
+                   aria-label="Underground: a blue metro carriage, number 5282, a figure behind its window"></video>
+            <figcaption>underground</figcaption>
+          </figure>
+          <figure class="reel">
+            <video src="images/info/ig-winter.mp4" poster="images/info/ig-winter-poster.jpg"
+                   width="1080" height="1350" muted loop playsinline preload="none"
+                   aria-label="Winter: an aircraft with a yellow nose, dusted with snow, on plinths beside a playground at dusk"></video>
+            <figcaption>winter</figcaption>
+          </figure>
+          <figure class="reel">
+            <video src="images/info/ig-names.mp4" poster="images/info/ig-names-poster.jpg"
+                   width="1080" height="1350" muted loop playsinline preload="none"
+                   aria-label="Names: Cyrillic station lettering set into a tiled metro wall"></video>
+            <figcaption>names</figcaption>
+          </figure>
+        </div>
+        <figcaption>4:5 · instagram · three 16 s loops</figcaption>
+      </figure>
 
       <button type="button" class="info-close" aria-label="Close info panel">Close</button>
     </article>
@@ -296,13 +319,22 @@
         if (e.key === 'ArrowLeft') { e.preventDefault(); show(index - 1); }
       });
 
-      // Info toggle. The "time as shape" loop plays only while Info is open;
-      // with reduced motion it waits for the viewer, behind its controls.
-      const loopVideo = infoPanel.querySelector('video');
+      // Info toggle. The loops on the Info page play only while Info is open
+      // and they are on screen; with reduced motion they wait for the
+      // viewer, behind their controls.
+      const loops = [...infoPanel.querySelectorAll('video')];
       const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+      const onScreen = new IntersectionObserver(entries => entries.forEach(({ target, isIntersecting }) => {
+        if (isIntersecting && !infoPanel.hidden && !reduceMotion.matches) {
+          target.play().catch(() => { target.controls = true; });
+        } else {
+          target.pause();
+        }
+      }), { root: infoPanel, threshold: 0.25 });
+      loops.forEach(v => onScreen.observe(v));
       const closeInfo = () => {
         infoPanel.hidden = true;
-        loopVideo?.pause();
+        loops.forEach(v => v.pause());
       };
       const openInfo = e => {
         e.preventDefault();
@@ -311,9 +343,7 @@
         infoPanel.hidden = false;
         infoPanel.scrollTop = 0;
         document.getElementById('info-heading').focus({ preventScroll: true });
-        if (!loopVideo) return;
-        if (reduceMotion.matches) loopVideo.controls = true;
-        else loopVideo.play().catch(() => { loopVideo.controls = true; });
+        if (reduceMotion.matches) loops.forEach(v => { v.controls = true; });
       };
       infoLink?.addEventListener('click', openInfo);
       infoPanel.querySelector('.info-close').addEventListener('click', () => {
