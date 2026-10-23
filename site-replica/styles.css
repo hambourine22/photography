@@ -365,6 +365,7 @@ body:has(.info-panel:not([hidden])) .navbar {
   gap: var(--sp-2);
 }
 .info-sheets img { width: 100%; height: auto; background: #141414; }
+.info-artefact--sheet img { display: block; width: min(100%, 48rem); height: auto; background: #f4f4f4; }
 .info-artefact--video video {
   display: block;
   width: min(100%, 28rem);
