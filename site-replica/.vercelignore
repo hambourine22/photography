@@ -2,3 +2,5 @@
 reference/
 images/_originals/
 .DS_Store
+_type-options.html
+anatomy.vite.config.mjs

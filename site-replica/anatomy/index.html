@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>тисяча · anatomy of distance travelled</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=PT+Mono&display=swap">
+    <style>
+        /* ── Tokens · guidance (black / white) by default; the GUI can switch
+              to the 1000 night palette, which rewrites these three ──────── */
+        :root {
+            --ground    : #000000;
+            --text      : #ffffff;
+            --muted     : #8f8f8f;
+            --ua-blue   : #0057b7;
+            --ua-yellow : #ffd700;
+            --rule      : color-mix(in srgb, var(--text) 55%, transparent);
+            --rule-thin : color-mix(in srgb, var(--text) 22%, transparent);
+            --veil      : color-mix(in srgb, var(--ground) 84%, transparent);
+            --gutter    : 16px;
+            --title     : 'MFred', 'JetBrains Mono', ui-monospace, monospace;
+            --mono      : 'JetBrains Mono', ui-monospace, monospace;
+            --type      : 'PT Mono', 'Courier New', monospace;
+        }
+
+        /* MFred · the primary title face (Latin only; Cyrillic stays in JetBrains Mono) */
+        @font-face {
+            font-family: 'MFred';
+            src: url('../fonts/MFred2.0-Heavy.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--ground);
+            color: var(--text);
+            overflow: hidden;
+            font-family: var(--mono);
+        }
+
+        /* ── Stage · the whole window, or a fixed 720 × 900 (4:5) frame scaled
+              to fit beside the GUI for Instagram export ───────────────────── */
+        .stage {
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            background: var(--ground);
+            container-type: inline-size;
+        }
+        .stage.framed {
+            right: auto;
+            bottom: auto;
+            transform-origin: 0 0;
+            outline: 1px solid rgba(255, 255, 255, 0.16);
+        }
+        body.framed { background: #1b1b1b; }
+        .frame-tag {
+            position: fixed;
+            font: 500 10px/14px var(--mono);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #8f8f8f;
+            pointer-events: none;
+        }
+        .export-host { position: fixed; left: -40000px; top: 0; pointer-events: none; }
+
+        /* backdrop (guidance fan, columns, marks) → WebGL → CSS3D type → overlays */
+        canvas.backdrop, canvas.webgl, .css3d {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
+        }
+        canvas.backdrop, .css3d { pointer-events: none; }
+        canvas.webgl { touch-action: none; }
+
+        /* MFred carries the day numbers 999–1003 wherever they head a day */
+        .mf { font-family: var(--title); font-weight: 700; letter-spacing: 0.01em; }
+
+        /* ── Grain · a noise tile stepped about, over everything but the GUI ─ */
+        .grain {
+            position: absolute;
+            inset: -50%;
+            z-index: 5;
+            pointer-events: none;
+            background-size: 256px 256px;
+            opacity: 0.14;
+            animation: grain 0.9s steps(9) infinite;
+        }
+        @keyframes grain {
+            0%   { transform: translate(0, 0); }
+            20%  { transform: translate(-7%, 4%); }
+            40%  { transform: translate(5%, -9%); }
+            60%  { transform: translate(-3%, 11%); }
+            80%  { transform: translate(9%, 2%); }
+            100% { transform: translate(-6%, -5%); }
+        }
+        @media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
+
+        /* ── Title ───────────────────────────────────────────────────────── */
+        .dt-title {
+            position: absolute;
+            left: var(--gutter);
+            top: 26px;
+            max-width: calc(100cqw - 380px);
+            pointer-events: none;
+        }
+        .dt-title .run { font: 500 10px/14px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+        .dt-title h1   { font: 700 32px/1 var(--title); letter-spacing: 0.01em; text-transform: uppercase; margin: 8px 0 8px; }
+        .dt-title .sub { font: 400 11px/15px var(--mono); color: var(--muted); }
+
+        /* ── Bottom component · readout ──────────────────────────────────────
+           Pinned to the viewport width less a gutter each side, so it never
+           sizes to its content; text that runs long wraps and the component
+           grows upward instead. */
+        .hud {
+            position: absolute;
+            left: var(--gutter);
+            right: var(--gutter);
+            bottom: var(--gutter);
+            width: calc(100cqw - 2 * var(--gutter));
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            column-gap: 20px;
+            border-top: 1px solid var(--rule);
+            background: var(--veil);
+            pointer-events: none;
+        }
+        .hud .cell {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            min-width: 0;
+            padding: 10px 0 10px;
+        }
+        .hud .lab  { font: 500 10px/13px var(--mono); letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+        .hud .val  { font: 700 19px/24px var(--mono); letter-spacing: -0.01em; }
+        .hud .val--sm { font-size: 14px; line-height: 20px; }
+        .hud .unit { font: 400 13px var(--mono); color: var(--muted); }
+        .hud .sub  { font: 400 11px/15px var(--mono); color: var(--muted); }
+        .hud .lab, .hud .val, .hud .sub { overflow-wrap: anywhere; }
+        .hud .strip {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 6px 28px;
+            padding: 7px 0 2px;
+            border-top: 1px solid var(--rule-thin);
+            font: 500 10px/14px var(--mono);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+        .hud .strip .code   { color: var(--text); white-space: pre-wrap; }
+        .hud .strip .status { color: var(--text); text-align: right; }
+
+        /* keep the GUI clear of the bottom component, however tall it grows */
+        .lil-gui.root.autoPlace { max-height: calc(100% - var(--hud-h, 120px) - 2 * var(--gutter)); }
+        body.framed .lil-gui.root.autoPlace { max-height: 100%; }
+
+        /* the readout answers to the stage's width, so the 4:5 frame composes
+           like a phone-width screen */
+        @container (max-width: 1180px) {
+            .hud { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @container (max-width: 560px) {
+            .dt-title, .hud { --gutter: 8px; }
+        }
+        @container (max-width: 760px) {
+            .dt-title { top: 44px; max-width: calc(100cqw - 2 * var(--gutter)); }
+            .dt-title h1 { font-size: 21px; }
+            .dt-title .sub { display: none; }
+            .hud { column-gap: 10px; }
+            .hud .cell--x, .hud .sub { display: none; }
+            .hud .val { font-size: 15px; line-height: 20px; }
+            .hud .val--sm { font-size: 12px; line-height: 16px; }
+            .hud .strip { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+            .hud .strip .status { order: -1; text-align: left; }
+            .hud .strip .code, .hud .strip .desk { display: none; }
+        }
+        .stage.framed .dt-title { top: 30px; }
+        .stage.framed .dt-title h1 { font-size: 34px; }
+
+        /* ── 3D labels · sized in CSS px, scaled into the planes ─────────── */
+        .dt-a { position: absolute; width: 0; height: 0; backface-visibility: hidden; }
+        .dt-l {
+            position: absolute;
+            white-space: nowrap;
+            font: 500 30px/1.2 var(--mono);
+            letter-spacing: 0.06em;
+            color: var(--text);
+            backface-visibility: hidden;
+        }
+        .dt-tl { left: 0; top: 0; }
+        .dt-tr { right: 0; top: 0; text-align: right; }
+        .dt-bl { left: 0; bottom: 0; }
+        .dt-ml { left: 0; top: 0; transform: translateY(-50%); }
+        .dt-mr { right: 0; top: 0; transform: translateY(-50%); text-align: right; }
+        .dt-tc { left: 0; top: 0; transform: translateX(-50%); text-align: center; }
+        .dt-bc { left: 0; bottom: 0; transform: translateX(-50%); text-align: center; }
+
+        .dt-l .m  { color: var(--muted); }
+        .dt-l .ua { color: var(--ua-yellow); font-weight: 700; }
+
+        .lbl-sec   { font: 500 24px/1.3 var(--mono); letter-spacing: 0.14em; margin-bottom: 6px; }
+        .lbl-sm, .dt-l.lbl-sm { font: 400 20px/1.4 var(--mono); letter-spacing: 0.02em; color: var(--muted); }
+        .lbl-day   { font: 700 44px/1 var(--mono); letter-spacing: -0.03em; margin-bottom: 10px; }
+        .dt-l.lbl-cross { font: 500 22px/1.35 var(--mono); letter-spacing: 0.02em; }
+        .dt-l.lbl-ruler { font: 400 20px/1.2 var(--mono); letter-spacing: 0.02em; color: var(--muted); }
+        .dt-l.lbl-cap   { font: 400 19px/1.2 var(--mono); letter-spacing: 0.06em; color: var(--muted); }
+        .dt-l.lbl-code  { font: 500 23px/1.35 var(--mono); letter-spacing: 0.04em; }
+        .dt-l.lbl-head  { font: 500 24px/1 var(--mono); letter-spacing: 0.04em; padding-bottom: 6px; }
+        .lbl-dir   { font: 400 18px/1.3 var(--mono); letter-spacing: 0.1em; color: var(--muted); }
+        .lbl-deg   { font: 700 34px/1.1 var(--mono); letter-spacing: 0; }
+        .lbl-disp-h { font: 700 21px/1.3 var(--mono); letter-spacing: 0; margin-bottom: 8px; }
+        .lbl-src   { font: 400 16px/1.3 var(--mono); letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+        .lbl-disp  { font: 400 19px/1.4 var(--type); letter-spacing: 0; color: var(--muted); }
+
+        /* ── Key · лист 2 ────────────────────────────────────────────────── */
+        .key {
+            width: 1300px;
+            padding: 64px 72px 72px;
+            background: var(--veil);
+            border: 1px solid var(--rule);
+            color: var(--muted);
+            font: 400 20px/1.45 var(--mono);
+            backface-visibility: hidden;
+        }
+        .key b, .key th, .key h2, .key h3, .key dt { color: var(--text); }
+        .key .k-run   { font-size: 18px; letter-spacing: 0.12em; }
+        .key .k-head  { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; margin-top: 18px; }
+        .key h2       { font: 700 64px/1 var(--mono); letter-spacing: -0.02em; }
+        .key .k-sheet { text-align: right; font-size: 18px; }
+        .key .k-lede  { margin-top: 18px; padding-bottom: 28px; border-bottom: 1px solid var(--rule); }
+        .key .k-sec   { padding: 28px 0 30px; border-bottom: 1px solid var(--rule-thin); }
+        .key h3       { font: 500 20px/1.3 var(--mono); letter-spacing: 0.14em; margin-bottom: 20px; }
+        .key .k-cols  { display: grid; grid-template-columns: 1fr 1fr; gap: 0 64px; align-items: start; }
+        .key .k-cols > .k-sec { border-bottom: 0; }
+        .key .k-cols + .k-cols, .key .k-sec + .k-cols { border-top: 0; }
+        .key div.k-cols:has(> .k-sec) { border-bottom: 1px solid var(--rule-thin); }
+        .key .k-code  { font: 500 52px/1.1 var(--mono); letter-spacing: 0.04em; color: var(--text); }
+        .key .k-note  { font-size: 17px; line-height: 1.5; margin-top: 12px; }
+        .key .k-parts { display: grid; grid-template-columns: 90px 1fr; gap: 8px 16px; font-size: 18px; }
+        .key .k-parts dt { font-weight: 500; }
+        .key table    { width: 100%; border-collapse: collapse; font-size: 18px; }
+        .key thead th { font-size: 14px; letter-spacing: 0.1em; color: var(--muted); font-weight: 400; text-align: left; padding: 0 12px 8px 0; }
+        .key td, .key tbody th { text-align: left; padding: 5px 12px 5px 0; font-weight: 400; white-space: nowrap; border-bottom: 1px solid transparent; }
+        .key .n       { text-align: right; padding-right: 0; }
+        .key .ua th, .key .ua td:nth-child(2) { color: var(--ua-yellow); font-weight: 700; }
+        .key tr.is-next { opacity: 0.45; }
+        .key tr.is-now td, .key tr.is-now th { color: var(--text); border-bottom-color: var(--rule); }
+        .key tr.ua.is-now td:nth-child(2) { color: var(--ua-yellow); }
+        .key .k-weights { list-style: none; display: grid; gap: 18px; color: var(--text); }
+        .key .k-weights li { display: flex; align-items: center; gap: 20px; }
+        .key .k-weights span { color: var(--muted); font-size: 17px; }
+        .key .k-marks { list-style: none; display: grid; grid-template-columns: repeat(4, 1fr); gap: 28px 24px; color: var(--text); }
+        .key .k-marks li { display: flex; gap: 14px; align-items: flex-start; font-size: 18px; }
+        .key .k-marks small { display: block; font-size: 15px; color: var(--muted); white-space: normal; }
+        .key .k-stamp { margin-top: 40px; border: 1px solid var(--rule); }
+        .key .k-stamp td { width: 33.3%; padding: 12px 14px 14px; border: 1px solid var(--rule-thin); color: var(--text); white-space: normal; font-size: 18px; }
+        .key .k-stamp span { display: block; font-size: 13px; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 4px; }
+        .key .k-stamp em { font-style: normal; color: var(--muted); }
+    </style>
+  <script type="module" crossorigin src="./assets/index-QetWnZwq.js"></script>
+</head>
+<body>
+    <a class="site-back" href="../">← тисяча · photographs</a>
+    <style>
+      .site-back {
+        position: fixed; top: 4px; left: 16px; z-index: 20;
+        padding: 3px 0;
+        font: 500 11px/14px 'JetBrains Mono', ui-monospace, monospace;
+        letter-spacing: 0.08em;
+        color: #f3e2b6;
+        text-decoration: none;
+      }
+      .site-back:hover, .site-back:focus-visible { text-decoration: underline; text-underline-offset: 3px; }
+      .site-back:focus-visible { outline: 1px solid #f3e2b6; outline-offset: 3px; }
+    </style>
+    <main class="stage">
+    <canvas class="backdrop" aria-hidden="true"></canvas>
+    <canvas class="webgl" aria-label="Animated route sheet: Bristol to Kyiv, 2 592 km over five days, drawn against distance, time or space"></canvas>
+    <div class="css3d"></div>
+
+    <header class="dt-title">
+        <p class="run">тисяча · case evac · winter 2024 · 1000·С002 · motion</p>
+        <h1>anatomy of distance travelled</h1>
+        <p class="sub">анатомія пройденої відстані · Bristol → Kyiv · days 999–1003 · 18–22.11.2024</p>
+    </header>
+
+    <section class="hud" aria-label="Distance, time and space travelled">
+        <div class="cell">
+            <span class="lab">відстань · distance</span>
+            <span class="val"><span data-r="km">0</span> <span class="unit">км</span></span>
+            <span class="sub" data-r="kmSub"></span>
+        </div>
+        <div class="cell">
+            <span class="lab">час · time</span>
+            <span class="val">день <span class="mf" data-r="day"></span></span>
+            <span class="sub" data-r="daySub"></span>
+        </div>
+        <div class="cell">
+            <span class="lab">простір · space</span>
+            <span class="val val--sm" data-r="pos"></span>
+            <span class="sub" data-r="posSub"></span>
+        </div>
+        <div class="cell cell--x">
+            <span class="lab">етап · leg</span>
+            <span class="val" data-r="leg"></span>
+            <span class="sub" data-r="legSub"></span>
+        </div>
+        <div class="cell cell--x">
+            <span class="lab">точка · waypoint</span>
+            <span class="val val--sm" data-r="wp"></span>
+            <span class="sub" data-r="wpSub"></span>
+        </div>
+        <div class="cell cell--x">
+            <span class="lab">перехід · crossing</span>
+            <span class="val" data-r="cross"></span>
+            <span class="sub" data-r="crossSub"></span>
+        </div>
+        <div class="strip">
+            <span class="code" data-r="code"></span>
+            <span class="note">Times are not yet logged: on the time axis each day is an equal column and the pace within a day is assumed even.<span class="desk"> Space bar plays and pauses.</span></span>
+            <span class="status" data-r="status"></span>
+        </div>
+    </section>
+    <div class="grain" aria-hidden="true"></div>
+    </main>
+    <p class="frame-tag" hidden></p>
+    <div class="export-host" aria-hidden="true"></div>
+
+</body>
+</html>

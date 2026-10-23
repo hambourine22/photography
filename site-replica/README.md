@@ -9,6 +9,10 @@ now come from the 1000 design system. No framework. No build step.
 - `images/info/` — the maquette spreads shown on the Info page,
   `maquette-00.jpg` to `-05.jpg`, 2400 px wide.
 - `images/_originals/` — the full-size files; ignored by git and by Vercel.
+- `anatomy/` — the three.js motion version of the anatomy sheet, built from
+  `src/distance-travelled` on the `feature/distance-travelled` branch:
+  `ANATOMY_SRC=<that folder> <repo>/node_modules/.bin/vite build --config anatomy.vite.config.mjs`
+  (run from a checkout of that branch). Linked from the nav as "Anatomy".
 
 ## Files
 

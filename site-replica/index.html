@@ -56,11 +56,11 @@
 
   <!-- ─── Navigation ─── -->
   <nav class="navbar" role="navigation" aria-label="Primary">
-    <a href="#pages" class="svg-link" aria-label="тисяча · distance travelled, home">
+    <a href="#gallery" class="svg-link" aria-label="тисяча · distance travelled, home">
       <span class="nav-wordmark" lang="uk">тисяча</span>
     </a>
     <ul class="nav-menu">
-      <li><a href="#pages" class="nav-link">Pages</a></li>
+      <li><a href="anatomy/" class="nav-link">Anatomy</a></li>
       <li><a href="#info" class="nav-link">Info</a></li>
     </ul>
   </nav>
@@ -153,7 +153,7 @@
       const gallery = document.getElementById('gallery');
       const infoPanel = document.getElementById('info');
       const infoLink = document.querySelector('a.nav-link[href="#info"]');
-      const pageLinks = document.querySelectorAll('a[href="#pages"]');
+      const homeLinks = document.querySelectorAll('a[href="#gallery"]');
       let frames = [...gallery.querySelectorAll('.image-container')];
       const pad = n => String(n).padStart(2, '0');
 
@@ -255,8 +255,8 @@
         }
       });
 
-      // Pages returns to the gallery.
-      pageLinks.forEach(a => a.addEventListener('click', e => {
+      // The wordmark returns to the gallery; Anatomy is its own page.
+      homeLinks.forEach(a => a.addEventListener('click', e => {
         e.preventDefault();
         closeInfo();
         gallery.focus({ preventScroll: true });
