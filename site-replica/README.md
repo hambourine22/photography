@@ -8,10 +8,11 @@ now come from the 1000 design system. No framework. No build step.
 - `images/main/` — the gallery frames, `dt1000-L<number>.jpg`, 2000 px wide, with
   800 px copies in `thumbs/`. The L number is the camera frame number on the
   original file (`…_DT1000_L1062013.jpg`). The gallery runs in L order, which is
-  the order of the journey, with one exception: the Lviv night frames
-  (L1061972–L1062003) come after the run L1062013–L1062081 (Germany and Poland
-  to the dusk bridge), because those were driven first. Order lives in
-  `index.html`; insert new frames by L number, minding that block.
+  the order of the journey, with two exceptions set by hand: the agricultural
+  lorry, trailer and turbines (L1062013–L1062049) follow the sea frames, and
+  the Lviv night frames (L1061972–L1062003) follow the dusk bridge (L1062081).
+  Dover frames without a known L number are named by place. Order lives in
+  `index.html`; insert new frames by L number, minding those blocks.
 - `images/info/` — the maquette spreads shown on the Info page,
   `maquette-00.jpg` to `-05.jpg`, 2400 px wide.
 - `images/_originals/` — the full-size files; ignored by git and by Vercel.
