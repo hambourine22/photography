@@ -440,7 +440,16 @@
     </article>
   </section>
 
-  <script type="module" src="editor.js"></script>
+  <script>
+    // The editing toolbar is a local tool: it loads on a development host
+    // only, never on the live site (editor.js isn't deployed).
+    if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)) {
+      const editor = document.createElement('script');
+      editor.type = 'module';
+      editor.src = 'editor.js';
+      document.body.appendChild(editor);
+    }
+  </script>
   <script>
     // ─── Core page behaviour (independent of the editor) ───
     (() => {

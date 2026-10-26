@@ -52,6 +52,10 @@ Then open `http://localhost:8000/`.
 
 ## Using the GUI
 
+The toolbar is for local editing only: it loads when the site is served from
+`localhost`, and `editor.js` is left out of the Vercel deploy, so the live site
+never shows it.
+
 A small toolbar lives in the bottom-right corner. The icons from left to right:
 
 | Button      | What it does                                                      |
