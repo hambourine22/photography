@@ -631,7 +631,7 @@ export class DistanceTravelled {
             colour        : PAL.text,
             // art direction
             theme         : 'guidance',
-            grain         : 0.14,
+            grain         : 0.025,
             backdrop      : 0.12,
             details       : true,
             // export · 4:5
