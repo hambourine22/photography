@@ -22,6 +22,7 @@ const pages = {
   taurus             : resolve(__dirname, 'src/taurus/index.html'),
   taurusEmbed        : resolve(__dirname, 'src/taurus-embed/index.html'),
   distanceTravelled  : resolve(__dirname, 'src/distance-travelled/index.html'),
+  droneOdometer      : resolve(__dirname, 'src/drone-odometer/index.html'),
 }
 
 // Pages not yet committed (taurus) would otherwise fail the build in a clean checkout.

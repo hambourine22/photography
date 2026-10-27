@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Odometer · Drone Watch — HUX 3D</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=PT+Mono&display=swap">
+    <style>
+        /* ── Tokens · guidance by default, as the distance-travelled page ─── */
+        :root {
+            --ground : #000000;
+            --text   : #ffffff;
+            --muted  : #8f8f8f;
+            --mono   : 'JetBrains Mono', ui-monospace, monospace;
+        }
+
+        /* MFred · title and numerals (Latin only) */
+        @font-face {
+            font-family: 'MFred';
+            src: url('../fonts/MFred2.0-Heavy.woff2') format('woff2');
+            font-weight: 700;
+            font-display: swap;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #1b1b1b;
+            color: var(--text);
+            font-family: var(--mono);
+        }
+
+        /* ── Stage · a fixed 720 × 900 (4:5) frame, scaled to fit ────────── */
+        .stage {
+            position: fixed;
+            width: 720px;
+            height: 900px;
+            overflow: hidden;
+            transform-origin: 0 0;
+            background: var(--ground);
+            outline: 1px solid rgba(255, 255, 255, 0.16);
+        }
+
+        /* backdrop (fan, scatter) → WebGL drums → HUD → grain */
+        .stage canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            display: block;
+        }
+
+        .grain {
+            position: absolute;
+            inset: -50%;
+            pointer-events: none;
+            background-size: 256px 256px;
+            opacity: 0.025;
+            animation: grain 0.9s steps(9) infinite;
+        }
+        @keyframes grain {
+            0%   { transform: translate(0, 0); }
+            20%  { transform: translate(-7%, 4%); }
+            40%  { transform: translate(5%, -9%); }
+            60%  { transform: translate(-3%, 11%); }
+            80%  { transform: translate(9%, 2%); }
+            100% { transform: translate(-6%, -5%); }
+        }
+        @media (prefers-reduced-motion: reduce) { .grain { animation: none; } }
+
+        .frame-tag {
+            position: fixed;
+            font: 500 10px/14px var(--mono);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #8f8f8f;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <main class="stage">
+        <canvas class="backdrop" aria-hidden="true"></canvas>
+        <canvas class="webgl" aria-hidden="true"></canvas>
+        <canvas class="hud" role="img" aria-label="Odometer and drone watch: a rolling odometer of the km driven from Bristol, a heading-up detection scope with simulated drone contacts, radio band levels, and a register stamping each contact with the odometer reading"></canvas>
+        <div class="grain" aria-hidden="true"></div>
+    </main>
+    <p class="frame-tag"></p>
+
+    <script type="module" src="./script.js"></script>
+</body>
+</html>
