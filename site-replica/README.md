@@ -13,8 +13,8 @@ now come from the 1000 design system. No framework. No build step.
   the Lviv night frames (L1061972–L1062003) follow the dusk bridge (L1062081).
   Dover frames without a known L number are named by place. Order lives in
   `index.html`; insert new frames by L number, minding those blocks.
-- `images/info/` — the maquette spreads shown on the Info page,
-  `maquette-00.jpg` to `-05.jpg`, 2400 px wide.
+- `images/info/` — the scrapbook spreads shown on the Info page,
+  `scrapbook-01.jpg` to `-24.jpg`, 2400 × 1492, one per page of the PDF.
 - `images/_originals/` — the full-size files; ignored by git and by Vercel.
 - `anatomy/` — the three.js motion version of the anatomy sheet, built from
   `src/distance-travelled` on the `feature/distance-travelled` branch:
