@@ -114,6 +114,9 @@
   --cream-200: #f3e2b6;
   --graphite: #4d4843;
   --blue-900: #0f465c;
+  --book-grey: #2b2a28;              /* the scrapbook's dark pages; not a design-system colour */
+  --night-text-muted: #a8a092;       /* the design system's night theme */
+  --night-surface-spine: #24221d;
   --surface-spine: var(--cream-200);
   --text-muted: var(--graphite);
   --rule: var(--ink);
@@ -518,8 +521,16 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
 /* Sections, one wrap each; every layout row inside a wrap is a .g12. */
 .info-section { padding-block: var(--ds-space-7) var(--ds-space-8); }
 .info-spreads { padding-bottom: var(--ds-space-9); }   /* the space above the artefacts band */
+/* The artefacts band sits on the scrapbook's dark grey, so it takes the
+   design system's night values: cream text and rules, a lighter muted
+   text, a dark spine surface and the pink focus ring. */
 .info-artefacts {
-  background: var(--pink-300);
+  --text-muted: var(--night-text-muted);
+  --rule: var(--cream-200);
+  --surface-spine: var(--night-surface-spine);
+  --focus: var(--pink-300);
+  background: var(--book-grey);
+  color: var(--cream-200);
   /* space-8 below the foot, and a second space-8 that the fixed nav (65px) covers */
   padding-bottom: calc(var(--ds-space-8) * 2);
 }
