@@ -119,8 +119,9 @@
   --rule: var(--ink);
   --focus: var(--blue-900);
 
-  --text-display: 700 64px/0.95 var(--font-display);
-  --text-heading: 700 32px/1.05 var(--font-display);
+  /* Large type in MFred Heavy, the site's title face, so always in capitals. */
+  --text-display: 900 64px/0.95 var(--font-title);
+  --text-heading: 900 32px/1.05 var(--font-title);
   --text-body:    400 15px/22px var(--font-mono);
   --text-label:   400 14px/18px var(--font-mono);
   --text-code:    500 13px/16px var(--font-mono);
@@ -594,7 +595,12 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   border-top: var(--ds-stroke-main) solid var(--rule);
 }
 .ip-kicker { margin: 0; font: var(--text-code); color: var(--text-muted); }
-.ip-heading { margin: 0; font: var(--text-display); text-transform: lowercase; }
+.ip-heading {
+  margin: 0;
+  font: var(--text-display);
+  letter-spacing: var(--track-display);
+  text-transform: uppercase;
+}
 
 /* Group label over each artefact group, with space-9 above all but the first. */
 .ip-group {
@@ -758,6 +764,7 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   margin: 0;
   padding-top: var(--ds-space-3);
   font: var(--text-display);
+  letter-spacing: var(--track-display);
   text-transform: uppercase;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
@@ -778,7 +785,12 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
 
 /* Artefacts · c · instagram: sidebar on 1–3, three reels on 4–12, each a
    page of three columns and two gutters. */
-.rl-heading { margin: 0; font: var(--text-heading); text-transform: lowercase; }
+.rl-heading {
+  margin: 0;
+  font: var(--text-heading);
+  letter-spacing: var(--track-heading);
+  text-transform: uppercase;
+}
 .rl-side .ip-note { margin-top: var(--ds-space-4); }
 .rl-reels {
   display: grid;
