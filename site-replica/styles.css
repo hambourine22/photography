@@ -757,11 +757,14 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   margin: 0;
 }
 /* Vertical page head, read bottom to top. Turned half round, so its
-   padding-top is the space between the word and the rule beneath. */
+   padding-top is the space between the word and the rule beneath.
+   The negative margin takes off the line box above MFred's cap height
+   (ascent less cap height, less half the negative leading at 0.95), so
+   the capitals' tops sit on the page's left edge. */
 .ip-vhead {
   align-self: end;
   justify-self: start;
-  margin: 0;
+  margin: 0 0 0 -0.11em;
   padding-top: var(--ds-space-3);
   font: var(--text-display);
   letter-spacing: var(--track-display);
