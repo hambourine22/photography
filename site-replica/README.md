@@ -11,7 +11,10 @@ now come from the 1000 design system. No framework. No build step.
   the order of the journey, with two exceptions set by hand: the agricultural
   lorry, trailer and turbines (L1062013–L1062049) follow the sea frames, and
   the Lviv night frames (L1061972–L1062003) follow the dusk bridge (L1062081).
-  Dover frames without a known L number are named by place. Order lives in
+  Dover frames without a known L number are named by place. The return
+  closes the gallery: thirteen frames without L numbers, named by subject,
+  from the sleeper train (`dt1000-sleeper-lamp.jpg`) to the border
+  (`dt1000-border-approach.jpg`). Order lives in
   `index.html`; insert new frames by L number, minding those blocks.
 - `images/info/` — the scrapbook spreads shown on the Info page,
   `scrapbook-01.jpg` to `-24.jpg`, 2400 × 1492, one per page of the PDF.
