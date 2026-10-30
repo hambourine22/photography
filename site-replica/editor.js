@@ -186,7 +186,7 @@ class Editor {
   annotateEditables() {
     const copySelectors = [
       '.enter-text', '.nav-link', '.project-title-copy',
-      '#info-heading', '.info-panel h3', '.info-panel p',
+      '#info-heading', '.info-panel h3', '.info-intro p',
     ];
     copySelectors.forEach((sel, idx) => {
       $$(sel).forEach((el, j) => {
