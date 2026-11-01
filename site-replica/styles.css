@@ -116,8 +116,6 @@
   --blue-900: #0f465c;
   --book-grey: #2b2a28;              /* the scrapbook's dark pages; not a design-system colour */
   --night-text-muted: #a8a092;       /* the design system's night theme */
-  --night-surface-spine: #24221d;
-  --surface-spine: var(--cream-200);
   --text-muted: var(--graphite);
   --rule: var(--ink);
   --focus: var(--blue-900);
@@ -497,9 +495,11 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
 
 /* ─── Info panel ─── */
 /* Scrolls as a page: a stack of full-width sections. The introduction and
-   the spreads sit on paper; the artefacts band is pink, full bleed. Every
-   value below comes from the design system layer at the top of this file. */
+   the spreads sit on paper; the artefacts band is dark grey, full bleed.
+   Every value below comes from the design system layer at the top of this
+   file. */
 .info-panel {
+  --plate-gap: calc(var(--ds-space-8) * 2);   /* between pieces down the page */
   position: fixed;
   inset: 0;
   z-index: 997;
@@ -517,17 +517,17 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   outline-offset: calc(var(--ds-stroke-main) * 2);
   border-radius: var(--ds-radius-0);
 }
+.info-panel h2:focus { outline: none; }
 
 /* Sections, one wrap each; every layout row inside a wrap is a .g12. */
 .info-section { padding-block: var(--ds-space-7) var(--ds-space-8); }
 .info-spreads { padding-bottom: var(--ds-space-9); }   /* the space above the artefacts band */
 /* The artefacts band sits on the scrapbook's dark grey, so it takes the
    design system's night values: cream text and rules, a lighter muted
-   text, a dark spine surface and the pink focus ring. */
+   text and the pink focus ring. */
 .info-artefacts {
   --text-muted: var(--night-text-muted);
   --rule: var(--cream-200);
-  --surface-spine: var(--night-surface-spine);
   --focus: var(--pink-300);
   background: var(--book-grey);
   color: var(--cream-200);
@@ -539,9 +539,12 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   margin-inline: auto;
   padding-inline: var(--grid-margin);
 }
+/* Dense, so a label that follows its piece in the source (and so on a phone)
+   can still hang to the left of it, in the same row. */
 .g12 {
   display: grid;
   grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+  grid-auto-flow: row dense;
   column-gap: var(--grid-gutter);
   row-gap: var(--grid-row-gap);
 }
@@ -549,57 +552,14 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
 .g12 > *     { grid-column: auto / span 12; min-width: 0; }
 .g12 > .c-3  { grid-column-end: span 3; }
 .g12 > .c-4  { grid-column-end: span 4; }
+.g12 > .c-5  { grid-column-end: span 5; }
 .g12 > .c-6  { grid-column-end: span 6; }
 .g12 > .c-9  { grid-column-end: span 9; }
-.g12 > .c-12 { grid-column-end: span 12; }
 .g12 > .s-4  { grid-column-start: 4; }
+.g12 > .s-7  { grid-column-start: 7; }
 .g12 > .s-10 { grid-column-start: 10; }
 
-/* Introduction (unchanged, now inside a wrap) */
-.info-panel h2 {
-  font-family: var(--font-title);
-  font-size: var(--t-h1);
-  font-weight: 900;
-  line-height: calc(var(--t-h1) + var(--lead));
-  letter-spacing: var(--track-display);
-  text-transform: uppercase;
-  margin: 0 0 var(--gap-hero);
-}
-.info-panel h2:focus { outline: none; }
-.info-intro p  { max-width: 42rem; margin: 0 0 var(--space-4); }
-.info-panel .info-lead {
-  font-size: var(--t-lead);
-  line-height: calc(var(--t-lead) + var(--lead));
-  letter-spacing: var(--track-lead);
-}
-.info-panel .info-kicker {
-  margin-bottom: var(--gap-tag);
-  font-size: var(--t-small);
-  line-height: calc(var(--t-small) + var(--lead));
-  letter-spacing: var(--track-small);
-  color: var(--muted);
-}
-.info-facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  margin: var(--gap-card) 0 0;
-  border-top: 1px solid var(--border);
-  border-left: 1px solid var(--border);
-}
-.info-facts > div {
-  padding: var(--sp-2) var(--sp-3);
-  border-right: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-}
-.info-facts dt {
-  font-size: var(--t-small);
-  line-height: calc(var(--t-small) + var(--lead));
-  letter-spacing: var(--track-small);
-  color: var(--muted);
-}
-.info-facts dd { margin: var(--space-1) 0 0; font-size: var(--t-body); }
-
-/* Section opener: kicker over the contents column, heading over the stage. */
+/* Section opener: kicker on columns 1–3, heading on 4–12, under one rule. */
 .ip-open {
   margin-bottom: var(--ds-space-7);
   padding-top: var(--ds-space-3);
@@ -613,19 +573,41 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   text-transform: uppercase;
 }
 
-/* Group label over each artefact group, with space-9 above all but the first. */
-.ip-group {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--ds-space-4);
-  margin: var(--ds-space-9) 0 var(--ds-space-5);
-  padding-top: var(--ds-space-2);
-  border-top: var(--ds-stroke-main) solid var(--rule);
-  font: var(--text-code);
+/* Introduction: the text on columns 4–9, the facts as a label on 10–12. */
+.info-text p { max-width: 42rem; margin: 0 0 var(--ds-space-4); }
+.info-panel .info-lead {
+  font-size: var(--t-lead);
+  line-height: calc(var(--t-lead) + var(--lead));
+  letter-spacing: var(--track-lead);
 }
-.ip-open + .ip-group { margin-top: 0; }
+.info-facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-4);
+  margin: 0;
+}
+.info-facts dt { font: var(--text-code); color: var(--text-muted); }
+.info-facts dd { margin: var(--ds-space-1) 0 0; font: var(--text-label); }
 
-/* Shared parts: buttons, dimension lines, captions, the title block. */
+/* Plates: each piece hangs on the grid with a wall label at its foot, the
+   label's side alternating down the page. */
+.ip-plate { margin-top: var(--plate-gap); }
+.ip-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  align-self: end;
+  gap: var(--ds-space-3);
+}
+.ip-title {
+  margin: 0;
+  font: var(--text-heading);
+  letter-spacing: var(--track-heading);
+  text-transform: uppercase;
+}
+.ip-cap,
+.ip-note { margin: 0; font: var(--text-body); }
+.ip-cap { margin-top: var(--ds-space-3); }
 .ip-btn,
 .sp-row { min-height: calc(var(--ds-space-6) + var(--ds-space-3)); }   /* 44px touch target */
 .ip-btn {
@@ -640,135 +622,67 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   font: var(--text-code);
 }
 .ip-btn:hover { background: var(--ink); color: var(--cream-200); }
-.ip-dim {
-  display: flex;
-  align-items: center;
-  gap: var(--ds-space-2);
-  margin: var(--ds-space-2) 0 0;
-  font: var(--text-code);
-}
-.ip-dim-tick { flex: none; height: var(--ds-space-3); border-left: var(--ds-stroke-thin) solid var(--rule); }
-.ip-dim-line { flex: 1; border-top: var(--ds-stroke-thin) solid var(--rule); }
-.ip-cap,
-.ip-note { margin: 0; font: var(--text-body); }
-.ip-cap { margin-top: var(--ds-space-3); }
 
-/* Title block (штамп): cream cells on an ink ground, so the gaps draw the
-   inner rules. Flex rather than grid, so a short last row fills its line
-   instead of leaving ink-filled empty cells. */
-.ip-tb {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ds-stroke-thin);
+/* Spreads: the stage on columns 1–9 with its label on 10–12, and the
+   contents beneath the stage. */
+.sp-frame {
   margin: 0;
-  background: var(--rule);
-  border: var(--ds-stroke-main) solid var(--rule);
+  aspect-ratio: 2400 / 1492;
+  border: var(--ds-stroke-thin) solid var(--rule);
+  background: var(--paper);
 }
-.ip-tb > div {
-  flex: 1 1 10rem;
-  display: flex;
-  flex-direction: column;
-  gap: var(--ds-space-1);
-  min-width: 0;
-  padding: var(--ds-space-3);
-  background: var(--surface-spine);
-}
-.ip-tb--stack > div { flex-basis: 100%; }
-.ip-tb dt { font: var(--text-code); color: var(--text-muted); text-transform: lowercase; }
-.ip-tb dd { margin: 0; font: var(--text-label); overflow-wrap: anywhere; }
-/* Below 2 device pixels a CSS px a half-pixel gap can round to nothing. */
-@media (resolution < 2dppx) { .ip-tb { gap: var(--ds-stroke-main); } }
-
-/* Spreads: a reader. Stage on columns 4–12, contents on 1–3 in the same row;
-   the stage comes first in the source so phones get it on top. */
-.sp-stage,
-.sp-list { grid-row: 1; }
-.sp-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--ds-space-4);
-  margin-bottom: var(--ds-space-3);
-}
-.sp-label { font: var(--text-code); }
+.sp-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
 .sp-steps { display: flex; gap: var(--ds-space-2); }
 .sp-step {
   min-width: calc(var(--ds-space-6) + var(--ds-space-3));
   padding-inline: var(--ds-space-3);
 }
-.sp-figure { margin: 0; }
-.sp-frame {
-  aspect-ratio: 2400 / 1492;
-  border: var(--ds-stroke-main) solid var(--rule);
-  background: var(--paper);
-}
-.sp-frame img { width: 100%; height: 100%; object-fit: contain; }
-.sp-caption {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: var(--grid-gutter);
-  margin-top: var(--ds-space-5);
-}
-.sp-list-label { margin: 0 0 var(--ds-space-2); font: var(--text-code); }
 .sp-rows {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  columns: 14rem 3;
   column-gap: var(--grid-gutter);
-  margin: 0;
+  margin: var(--ds-space-3) 0 0;
   padding: 0;
   list-style: none;
-  border-top: var(--ds-stroke-main) solid var(--rule);
 }
-.sp-rows li { border-bottom: var(--ds-stroke-thin) solid var(--rule); }
+.sp-rows li { break-inside: avoid; }
 .sp-row {
   display: flex;
   align-items: center;
-  gap: var(--ds-space-2);
+  gap: var(--ds-space-3);
   width: 100%;
-  padding: var(--ds-space-2) var(--ds-space-3);
   font: var(--text-code);
+  color: var(--text-muted);
   text-align: left;
 }
-.sp-row:hover { background: var(--pink-300); }
-.sp-row[aria-current="true"] { background: var(--surface-spine); color: var(--ink); }
-.sp-n { flex: none; min-width: 2ch; font-weight: 700; }
-.sp-t { flex: 0 1 auto; }
-.sp-l { flex: 1 1 var(--ds-space-3); min-width: var(--ds-space-3); border-bottom: var(--ds-stroke-main) dotted; }
-.sp-x { flex: none; white-space: nowrap; }
+.sp-row:hover,
+.sp-row[aria-current="true"] { color: var(--ink); }
+.sp-row[aria-current="true"] .sp-t {
+  text-decoration: underline var(--ds-stroke-main);
+  text-underline-offset: 0.3em;
+}
+.sp-n { flex: none; min-width: 2ch; }
+.sp-x { margin-left: auto; white-space: nowrap; }
 
-/* Artefacts · a · anatomy: two sheets at equal height on columns 1–9
-   (2700 and 1170 wide on the same 1938 height), notes on 10–12. */
-.an-strip { margin: 0; }
+/* Artefacts · anatomy: two sheets at equal height (2700 and 1170 wide on
+   the same 1938 height). */
 .an-sheets {
   display: grid;
   grid-template-columns: 2700fr 1170fr;
   gap: var(--ds-space-2);
+  margin: 0;
 }
 .an-sheets img { width: 100%; height: auto; background: var(--ink); }
 .an-sheets img:first-child { aspect-ratio: 2400 / 1722; }
 .an-sheets img:last-child  { aspect-ratio: 1040 / 1722; }
-.an-side {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--grid-row-gap);
-}
-.an-side .ip-tb { align-self: stretch; }
 
-/* Artefacts · b · stills and loops: three 4:5 pages, four columns each. Each
-   page is a subgrid of four rows (head, rule, picture, caption), so heads of
-   different lengths still sit on one line and the pictures align. */
-.ip-pages { row-gap: 0; }
+/* Pages: a 4:5 picture under its vertical head. */
 .ip-page {
   display: grid;
-  grid-row: span 4;
-  grid-template-rows: subgrid;
   grid-template-columns: minmax(0, 1fr);
-  row-gap: 0;
   margin: 0;
 }
 /* Vertical page head, read bottom to top. Turned half round, so its
-   padding-top is the space between the word and the rule beneath.
+   padding-top is the space between the word and the picture beneath.
    The negative margin takes off the line box above MFred's cap height
    (ascent less cap height, less half the negative leading at 0.95), so
    the capitals' tops sit on the page's left edge. */
@@ -783,29 +697,25 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
-.ip-pmeta {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--ds-space-2);
-  margin: 0;
-  padding: var(--ds-space-2) 0 var(--ds-space-3);
-  border-top: var(--ds-stroke-main) solid var(--rule);
-  font: var(--text-code);
-}
 .ip-media { align-self: start; min-height: 0; aspect-ratio: 4 / 5; background: var(--paper); }
 .ip-media > * { width: 100%; height: 100%; object-fit: contain; }
 .ip-media > video,
 .ip-reel video { background: var(--ink); }
 
-/* Artefacts · c · instagram: sidebar on 1–3, three reels on 4–12, each a
-   page of three columns and two gutters. */
-.rl-heading {
-  margin: 0;
-  font: var(--text-heading);
-  letter-spacing: var(--track-heading);
-  text-transform: uppercase;
+/* Artefacts · time as shape: three pages in a row, the middle one hung
+   lower. Each page is a subgrid of three rows (head, picture, caption), so
+   heads of different lengths still sit on one line and the pictures align. */
+.ip-trio {
+  --drop: calc(var(--ds-space-9) * 2);
+  row-gap: 0;
+  margin-top: var(--ds-space-6);
+  padding-bottom: var(--drop);
 }
-.rl-side .ip-note { margin-top: var(--ds-space-4); }
+.ip-trio > .ip-page { grid-row: span 3; grid-template-rows: subgrid; }
+.ip-trio > .ip-page:nth-child(2) { translate: 0 var(--drop); }
+
+/* Artefacts · instagram: three reels on columns 1–9, each a page of three
+   columns and two gutters. */
 .rl-reels {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -821,21 +731,22 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
   justify-content: space-between;
   align-items: center;
   gap: var(--ds-space-4);
-  margin-top: var(--ds-space-9);
+  margin-top: var(--plate-gap);
   padding-top: var(--ds-space-4);
   border-top: var(--ds-stroke-main) solid var(--rule);
   font: var(--text-code);
 }
 
-/* The two grid breakpoints (see the design system layer at the top). */
+/* The two grid breakpoints (see the design system layer at the top). Below
+   1000px every piece takes the full width with its label beneath. */
 @media (max-width: 1000px) {
-  .g12 > :is(.c-3, .c-6, .c-9) { grid-column: 1 / -1; }
-  .sp-stage,
-  .sp-list { grid-row: auto; }
+  .g12 > :is(.c-3, .c-5, .c-6, .c-9) { grid-column: 1 / -1; }
+  .ip-label { align-self: start; }
+  .ip-plate > .ip-page { max-width: 30rem; }
+  .ip-trio { --drop: var(--ds-space-9); }
 }
 @media (max-width: 640px) {
-  .sp-caption { grid-template-columns: minmax(0, 1fr); }
-  .ip-pages,
+  .ip-trio,
   .rl-reels {
     grid-template-columns: none;
     grid-auto-flow: column;
@@ -844,8 +755,9 @@ body:has(.info-panel:not([hidden]), .all-panel:not([hidden])) .navbar {
     scroll-snap-type: x mandatory;
     padding-bottom: var(--ds-space-3);
   }
-  .ip-pages > .ip-page,
+  .ip-trio > .ip-page,
   .rl-reels > .ip-reel { grid-column: auto; scroll-snap-align: start; }
+  .ip-trio > .ip-page:nth-child(2) { translate: none; }
 }
 
 /* ─── Mobile tweaks ─── */
